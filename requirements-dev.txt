@@ -1,0 +1,12 @@
+# Dependencias adicionais do pipeline de ingestao e do Databricks.
+# Nao sao necessarias para rodar o painel; ficam separadas para manter o
+# ambiente publicado enxuto.
+-r requirements.txt
+
+# Leitura dos arquivos .dbc do DATASUS (DBF comprimido com PKWare DCL)
+pyreaddbc==2.0.4
+dbfread==2.0.7
+
+
+# Transferencia com o Databricks
+databricks-sdk==0.133.0

@@ -1,0 +1,22 @@
+# SaudeViz - dependencias do painel publicado no Streamlit Cloud.
+# Versoes fixadas nas mesmas usadas em desenvolvimento: o objetivo e que o
+# ambiente publicado reproduza exatamente o local, sem surpresa de API mudada.
+
+# Painel e graficos
+streamlit==1.62.0
+plotly==7.0.0
+
+# Manipulacao de dados
+pandas==2.3.1
+numpy==2.3.2
+pyarrow==25.0.1
+
+# Acesso ao Oracle - modo thin, sem Instant Client
+oracledb==4.0.2
+
+# Executa o SQL do tradutor sobre os parquets quando o Oracle esta fora,
+# para que o modo de contingencia continue respondendo consultas
+duckdb==1.5.5
+
+# Modelo de previsao
+scikit-learn==1.9.0

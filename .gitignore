@@ -1,0 +1,50 @@
+# ---------------------------------------------------------------------------
+# Credenciais - NUNCA versionar
+# ---------------------------------------------------------------------------
+.streamlit/secrets.toml
+.env
+*.pem
+*.key
+
+# ---------------------------------------------------------------------------
+# Dados intermediarios
+#
+# As camadas Bronze e Prata somam mais de 500 MB e sao REPRODUZIVEIS: qualquer
+# pessoa regenera com os scripts de src/ingestao. Versionar dado bruto de
+# terceiros incharia o repositorio sem agregar informacao.
+#
+# A camada OURO fica versionada de proposito (~6 MB): e ela que o painel usa
+# como retrato de contingencia, e e ela que permite reproduzir os resultados
+# sem precisar de acesso ao Oracle nem ao Databricks.
+# ---------------------------------------------------------------------------
+dados/raw/
+dados/bronze/
+dados/prata/
+dados/*.duckdb
+dados/*.duckdb.wal
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# ---------------------------------------------------------------------------
+# Sistema operacional e editores
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# ---------------------------------------------------------------------------
+# Arquivos temporarios do pipeline
+# ---------------------------------------------------------------------------
+*.dbf
+*.dbc
+*.log
