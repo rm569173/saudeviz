@@ -13,6 +13,7 @@ Saida: EC_Sprint_2_1TSCO_EvidenciasConstrucao_SaudeViz_Lucas_Colen.pptx
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from PIL import Image
@@ -21,6 +22,10 @@ from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Emu, Inches, Pt
+
+from notas_apresentador import NOTAS
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 RAIZ = Path(__file__).resolve().parents[1]
 IMG = RAIZ / "apresentação"
@@ -41,6 +46,9 @@ FRACO = RGBColor(0x64, 0x74, 0x8B)
 
 SERIF = "Cambria"
 MONO = "Consolas"
+
+# Separador de paragrafo dentro das notas do apresentador: linha em branco.
+SEPARADOR = chr(10) * 2
 
 # Slide 16:9 no mesmo tamanho do deck da Sprint 1.
 LARG, ALT = Inches(10), Inches(5.625)
@@ -112,6 +120,26 @@ def titulo(slide, texto, sub=None):
               tamanho=10.5, cor=FRACO, espaco=0)
 
 
+def anota(slide, numero):
+    """
+    Grava a fala do apresentador no painel de anotacoes do slide.
+
+    Vai dentro do proprio .pptx: o texto viaja com o arquivo, aparece no modo
+    apresentador e nao depende de abrir outro documento na hora de falar.
+    """
+    nota = NOTAS.get(numero)
+    if not nota:
+        return
+    # As notas sao escritas com quebra de linha por causa da largura do
+    # codigo-fonte; aqui viram paragrafos de texto corrido.
+    paragrafos = [" ".join(bloco.split())
+                  for bloco in nota.split(SEPARADOR) if bloco.strip()]
+    quadro = slide.notes_slide.notes_text_frame
+    quadro.text = paragrafos[0]
+    for paragrafo in paragrafos[1:]:
+        quadro.add_paragraph().text = paragrafo
+
+
 def rodape(slide, numero):
     caixa(slide, MARGEM, ALT - Inches(0.42), Inches(6), Inches(0.25),
           ["SaúdeViz · Challenge FIAP × Oracle 2026 · Sprint 2"],
@@ -119,6 +147,7 @@ def rodape(slide, numero):
     caixa(slide, LARG - MARGEM - Inches(0.6), ALT - Inches(0.42),
           Inches(0.6), Inches(0.25), [str(numero)],
           tamanho=7.5, cor=FRACO, espaco=0, alinhamento=PP_ALIGN.RIGHT)
+    anota(slide, numero)
 
 
 def imagem(slide, nome, x, y, w, h, moldura=True):
@@ -342,6 +371,8 @@ def capa(prs):
         "Turma 1TSCOA",
         "Lucas Ventura Araujo Ribas Colen — RM 569173",
     ], tamanho=11.5, cor=CORPO, espaco=4)
+    # A capa nao tem rodape, entao a nota e gravada aqui.
+    anota(s, 1)
     return s
 
 
