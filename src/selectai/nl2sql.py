@@ -74,8 +74,18 @@ def extrai_entidades(pergunta: str) -> Entidades:
             entidades.uf = UFS[expressao]
             break
 
+    # Nomes de estado saem do texto antes da busca por mes: "Rio de Janeiro"
+    # contem "janeiro" e daria a toda pergunta sobre o RJ um filtro de janeiro
+    # que ninguem pediu.
+    texto_meses = texto
+    for expressao in sorted(UFS, key=len, reverse=True):
+        texto_meses = re.sub(f"(?<![a-z]){re.escape(expressao)}(?![a-z])",
+                             " ", texto_meses)
+
+    # O limite de palavra tambem importa: sem ele "maio" casa dentro de
+    # "maior", e "quais hospitais tem maior permanencia" ganha um mes.
     for nome, numero in MESES.items():
-        if nome in texto:
+        if re.search(f"(?<![a-z]){nome}(?![a-z])", texto_meses):
             entidades.mes = numero
             break
 
