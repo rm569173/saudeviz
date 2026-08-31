@@ -2,30 +2,22 @@
 # MAGIC %md
 # MAGIC # SaúdeViz — Databricks alcança o Oracle da FIAP?
 # MAGIC
-# MAGIC **Challenge FIAP × Oracle 2026 · 1TSCOA · Lucas Ventura Araujo Ribas Colen — RM 569173**
+# MAGIC Challenge FIAP × Oracle 2026 · 1TSCOA · Lucas Ventura Araujo Ribas Colen — RM 569173
 # MAGIC
-# MAGIC Este notebook decide um ponto de arquitetura, e nada mais. A pergunta é:
+# MAGIC Responde a uma pergunta de arquitetura: o compute serverless do
+# MAGIC Databricks consegue conectar em `oracle.fiap.com.br:1521`?
 # MAGIC
-# MAGIC > O compute serverless do Databricks consegue abrir conexão com
-# MAGIC > `oracle.fiap.com.br:1521`?
-# MAGIC
-# MAGIC | Resposta | Arquitetura resultante |
+# MAGIC | Resposta | O que muda |
 # MAGIC |---|---|
-# MAGIC | **Sim** | Ouro vai do Spark direto para o Oracle. Um salto de rede a menos e nenhum arquivo intermediário |
-# MAGIC | **Não** | Ouro é exportada para parquet, baixada para a estação local e carregada de lá no Oracle |
+# MAGIC | Sim | A camada Ouro vai do Spark direto para o Oracle |
+# MAGIC | Não | A Ouro sai em parquet e a carga roda da estação local |
 # MAGIC
-# MAGIC Rode as células na ordem. A célula 2 já responde a pergunta principal —
-# MAGIC se ela falhar, as seguintes vão falhar também e não há o que consertar
-# MAGIC do nosso lado: é regra de rede.
+# MAGIC Rode as células na ordem. Se a célula 1 falhar, as seguintes também
+# MAGIC falham: é regra de rede, não configuração.
 # MAGIC
-# MAGIC ---
-# MAGIC
-# MAGIC ### Por que python-oracledb e não JDBC
-# MAGIC
-# MAGIC O caminho tradicional seria o driver JDBC da Oracle (`ojdbc11.jar`), mas
-# MAGIC o Free Edition roda **só compute serverless**, onde instalar bibliotecas
-# MAGIC Maven é limitado. O `python-oracledb` em modo *thin* é Python puro: não
-# MAGIC precisa de JAR nem de Oracle Instant Client, e instala com `%pip`.
+# MAGIC Usamos `python-oracledb` em modo thin em vez do driver JDBC porque o
+# MAGIC Free Edition roda só compute serverless, onde instalar bibliotecas Maven
+# MAGIC é limitado. O modo thin é Python puro e instala com `%pip`.
 
 # COMMAND ----------
 
@@ -40,8 +32,8 @@ dbutils.library.restartPython()
 # MAGIC %md
 # MAGIC ## 1. A porta 1521 está acessível?
 # MAGIC
-# MAGIC Teste de TCP puro, sem autenticação. Separa "a rede bloqueia" de
-# MAGIC "a credencial está errada" — dois problemas com soluções opostas.
+# MAGIC Teste de TCP puro, sem autenticação. Separa bloqueio de rede de erro de
+# MAGIC credencial.
 
 # COMMAND ----------
 
@@ -72,10 +64,9 @@ except Exception as erro:
 # MAGIC %md
 # MAGIC ## 2. A autenticação funciona?
 # MAGIC
-# MAGIC A senha vem do secret scope `saudeviz`, registrado da estação local com
-# MAGIC `py -m src.db.databricks_secrets`. Ela **não** aparece neste notebook: o
-# MAGIC Databricks mascara automaticamente valores lidos de secrets, mesmo se
-# MAGIC alguém tentar imprimi-los.
+# MAGIC A senha vem do secret scope `saudeviz`, registrado com
+# MAGIC `py -m src.db.databricks_secrets`. O Databricks mascara valores lidos de
+# MAGIC secrets, então ela não aparece na saída.
 
 # COMMAND ----------
 
@@ -109,10 +100,8 @@ else:
 # MAGIC %md
 # MAGIC ## 3. Dá para gravar de verdade?
 # MAGIC
-# MAGIC Alcançar e autenticar não basta: precisamos escrever em lote com
-# MAGIC desempenho aceitável. Esta célula grava e apaga uma tabela de teste,
-# MAGIC medindo a taxa de inserção — é ela que diz se carregar a camada Ouro
-# MAGIC daqui é viável ou se vai levar meia hora.
+# MAGIC Grava e apaga uma tabela de teste, medindo a taxa de inserção. É o que
+# MAGIC define se vale carregar a camada Ouro daqui ou pela estação local.
 
 # COMMAND ----------
 

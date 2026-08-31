@@ -2,24 +2,21 @@
 # MAGIC %md
 # MAGIC # SaúdeViz — Camada Prata
 # MAGIC
-# MAGIC **Challenge FIAP × Oracle 2026 · 1TSCOA · Lucas Ventura Araujo Ribas Colen — RM 569173**
+# MAGIC Challenge FIAP × Oracle 2026 · 1TSCOA · Lucas Ventura Araujo Ribas Colen — RM 569173
 # MAGIC
-# MAGIC Transforma o dado bruto em dado confiável. Cinco frentes:
+# MAGIC Transforma o dado bruto em dado confiável:
 # MAGIC
-# MAGIC 1. **Tipagem** — datas, numéricos e categóricos com tipo correto
-# MAGIC 2. **Decodificação** — os códigos do SIH viram texto de negócio
-# MAGIC 3. **Dimensão temporal** — troca da competência de pagamento pela data real de internação
-# MAGIC 4. **Enriquecimento** — capítulo CID-10, desfecho da internação, sinalizadores de qualidade
-# MAGIC 5. **Qualidade** — deduplicação por AIH e descarte de registros inconsistentes
+# MAGIC 1. Tipagem de datas, numéricos e categóricos
+# MAGIC 2. Decodificação dos códigos do SIH para texto
+# MAGIC 3. Troca da dimensão temporal para a data de internação
+# MAGIC 4. Enriquecimento com capítulo CID-10 e desfecho da internação
+# MAGIC 5. Deduplicação por AIH e descarte de registros inconsistentes
 # MAGIC
-# MAGIC ---
+# MAGIC ## A competência do SIH não é a data da internação
 # MAGIC
-# MAGIC ## A correção mais importante deste notebook
-# MAGIC
-# MAGIC O campo `ANO_CMPT`/`MES_CMPT` do SIH é a **competência de pagamento** da
-# MAGIC AIH, não o mês em que o paciente internou. Medimos isso nos próprios
-# MAGIC dados: a competência `202401` traz **41,7% de internações de 2023**, e a
-# MAGIC competência `202406` tem apenas **58%** de internações do próprio mês.
+# MAGIC `ANO_CMPT`/`MES_CMPT` é o mês em que a AIH foi paga. Medido nos dados: a
+# MAGIC competência `202401` traz 41,7% de internações de 2023, e a `202406` tem
+# MAGIC só 58% de internações do próprio mês.
 # MAGIC
 # MAGIC | Defasagem entre internar e faturar | Participação |
 # MAGIC |---|---|
@@ -28,10 +25,10 @@
 # MAGIC | 2 meses depois | 10% |
 # MAGIC | 3 meses depois | 4% |
 # MAGIC
-# MAGIC Usar a competência como eixo de tempo faria o painel responder uma
-# MAGIC pergunta **financeira** enquanto promete uma **assistencial**. Por isso
-# MAGIC toda análise usa `dt_internacao`, e as competências de 2025 entram só
-# MAGIC para recuperar as internações de dezembro/2024 faturadas com atraso.
+# MAGIC Usar a competência como eixo de tempo responderia uma pergunta
+# MAGIC financeira, não assistencial. Toda análise usa `dt_internacao`, e as
+# MAGIC competências de 2025 entram para recuperar as internações de dezembro de
+# MAGIC 2024 faturadas com atraso.
 
 # COMMAND ----------
 
@@ -56,9 +53,8 @@ spark.sql(f"USE CATALOG {CATALOGO}")
 # MAGIC %md
 # MAGIC ## 2. Dicionários de domínio do SIH/SUS
 # MAGIC
-# MAGIC Os valores vêm do dicionário oficial do DATASUS. Traduzimos aqui, na
-# MAGIC Prata, para que nenhuma consulta posterior precise saber que `02`
-# MAGIC significa urgência — inclusive o tradutor de linguagem natural.
+# MAGIC Valores do dicionário oficial do DATASUS. A tradução acontece aqui para
+# MAGIC que nenhuma consulta posterior precise saber que `02` é urgência.
 
 # COMMAND ----------
 
@@ -118,10 +114,8 @@ def mapa_spark(dicionario: dict, padrao: str = "Nao informado"):
 # MAGIC %md
 # MAGIC ## 3. Capítulos CID-10 e desfecho da internação
 # MAGIC
-# MAGIC Duas classificações por **faixa**, não por valor exato. Em vez de
-# MAGIC encadear dezenas de `when`, montamos tabelas de referência e usamos
-# MAGIC `broadcast join` — mais legível, e o Spark resolve em memória porque as
-# MAGIC tabelas são minúsculas.
+# MAGIC São classificações por faixa, não por valor exato. Usamos tabelas de
+# MAGIC referência com `broadcast join` em vez de dezenas de `when` encadeados.
 
 # COMMAND ----------
 
@@ -317,9 +311,8 @@ prata = (
 # MAGIC %md
 # MAGIC ## 7. Qualidade — deduplicação e regras de consistência
 # MAGIC
-# MAGIC A mesma AIH pode aparecer em mais de uma competência quando é
-# MAGIC reapresentada. Deduplicamos por `n_aih` mantendo a apresentação mais
-# MAGIC recente, que é a versão válida do registro.
+# MAGIC A mesma AIH aparece em mais de uma competência quando é reapresentada.
+# MAGIC Deduplicamos por `n_aih` mantendo a apresentação mais recente.
 
 # COMMAND ----------
 
@@ -440,11 +433,10 @@ print(f"Municipios: {municipios.count():,}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 10. Validação — a prova de que a correção temporal funcionou
+# MAGIC ## 10. Validação da correção temporal
 # MAGIC
-# MAGIC Se a dimensão temporal estivesse errada, janeiro apareceria inflado e a
-# MAGIC defasagem de faturamento seria sempre zero. As duas consultas abaixo
-# MAGIC devem mostrar o contrário.
+# MAGIC Se a dimensão temporal estivesse errada, a defasagem de faturamento
+# MAGIC seria sempre zero.
 
 # COMMAND ----------
 
@@ -476,14 +468,11 @@ display(spark.sql(f"""
 # MAGIC %md
 # MAGIC ### Leitura esperada
 # MAGIC
-# MAGIC - **Defasagem**: distribuição decrescente a partir de 0, com a maior
-# MAGIC   parte concentrada nos três primeiros meses. Confirma que competência e
-# MAGIC   internação são coisas diferentes.
-# MAGIC - **Por ano**: aparecem 2023, 2024 e 2025. Só 2024 está completo — os
-# MAGIC   outros dois são as caudas das competências das pontas e serão
-# MAGIC   descartados na camada Ouro.
+# MAGIC A defasagem deve cair a partir de zero, concentrada nos três primeiros
+# MAGIC meses. E devem aparecer 2023, 2024 e 2025: só 2024 está completo, os
+# MAGIC outros são as caudas das competências das pontas, descartadas na Ouro.
 # MAGIC
 # MAGIC ### Próximo passo
 # MAGIC
 # MAGIC O notebook `03_ouro` monta o star schema, calcula o indicador de pressão
-# MAGIC assistencial e exporta as tabelas para o painel e para o Oracle.
+# MAGIC assistencial e carrega as tabelas no Oracle.

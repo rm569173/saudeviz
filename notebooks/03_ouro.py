@@ -2,20 +2,19 @@
 # MAGIC %md
 # MAGIC # SaúdeViz — Camada Ouro
 # MAGIC
-# MAGIC **Challenge FIAP × Oracle 2026 · 1TSCOA · Lucas Ventura Araujo Ribas Colen — RM 569173**
+# MAGIC Challenge FIAP × Oracle 2026 · 1TSCOA · Lucas Ventura Araujo Ribas Colen — RM 569173
 # MAGIC
-# MAGIC Modelo dimensional e indicadores de negócio. É a camada que responde às
-# MAGIC três perguntas do desafio sem varrer microdado:
+# MAGIC Modelo dimensional e indicadores de negócio. Responde às três perguntas
+# MAGIC do desafio sem varrer microdado:
 # MAGIC
-# MAGIC | Pergunta do desafio | Tabela que responde |
+# MAGIC | Pergunta | Tabela |
 # MAGIC |---|---|
 # MAGIC | Onde as internações estão crescendo? | `serie_temporal_uf`, `fato_internacao_mensal` |
 # MAGIC | Quais perfis pressionam mais o sistema? | `fato_internacao_mensal` |
-# MAGIC | Onde a capacidade está sendo ultrapassada? | `ind_capacidade_municipal` |
+# MAGIC | Onde a capacidade foi ultrapassada? | `ind_capacidade_municipal` |
 # MAGIC
-# MAGIC Ao final, as tabelas são gravadas **direto no Oracle Database da FIAP** —
-# MAGIC conectividade comprovada em `00_teste_conectividade_oracle` a
-# MAGIC 6.401 linhas/s.
+# MAGIC Ao final, as tabelas vão direto para o Oracle da FIAP, a 6.401 linhas/s
+# MAGIC medidas em `00_teste_conectividade_oracle`.
 
 # COMMAND ----------
 
@@ -52,8 +51,8 @@ spark.sql(f"USE CATALOG {CATALOGO}")
 # MAGIC %md
 # MAGIC ## 1. Recorte temporal
 # MAGIC
-# MAGIC A Prata contém três anos porque a competência do SIH é o mês de
-# MAGIC pagamento. Aqui ficamos apenas com as internações **ocorridas** em 2024.
+# MAGIC A Prata tem três anos porque a competência do SIH é o mês de pagamento.
+# MAGIC Aqui ficam só as internações ocorridas em 2024.
 
 # COMMAND ----------
 
@@ -114,12 +113,11 @@ print(f"leitos SUS no Sudeste: "
 # MAGIC %md
 # MAGIC ## 3. Fato — internações mensais
 # MAGIC
-# MAGIC Grão: município de atendimento × competência × perfil de atendimento ×
-# MAGIC complexidade × caráter da internação.
+# MAGIC Grão: município de atendimento × competência × perfil × complexidade ×
+# MAGIC caráter da internação.
 # MAGIC
-# MAGIC As médias são calculadas **depois** das somas, nunca agregando médias
-# MAGIC parciais — média de médias daria peso igual a grupos de tamanhos
-# MAGIC diferentes.
+# MAGIC As médias saem depois das somas. Média de médias daria peso igual a
+# MAGIC grupos de tamanhos diferentes.
 
 # COMMAND ----------
 
@@ -169,14 +167,12 @@ print(f"fato_internacao_mensal: {fato.count():,} linhas")
 # MAGIC                 leitos-dia = leitos SUS × dias do mês
 # MAGIC ```
 # MAGIC
-# MAGIC Usamos os **dias reais de cada mês** (28, 30, 31), e não uma média de
-# MAGIC 30,4 — como a dimensão temporal agora é a data de internação, essa
-# MAGIC precisão passou a ser possível, e fevereiro deixa de parecer mais
-# MAGIC pressionado do que é.
+# MAGIC Usa os dias reais de cada mês (28, 30, 31), não uma média de 30,4. Sem
+# MAGIC isso fevereiro apareceria mais pressionado do que é.
 # MAGIC
-# MAGIC Acima de 1,0 a demanda superou a capacidade instalada declarada ao SUS.
-# MAGIC **É um alerta para investigar, não uma prova de colapso**: pode indicar
-# MAGIC também leito não atualizado no CNES.
+# MAGIC Acima de 1,0 a demanda superou a capacidade declarada ao SUS. É alerta
+# MAGIC para investigar, não prova de colapso: pode ser leito desatualizado no
+# MAGIC CNES.
 
 # COMMAND ----------
 
@@ -301,9 +297,9 @@ display(rank_hospitais.orderBy("ranking_regional").limit(10)
 # MAGIC %md
 # MAGIC ## 6. Série temporal por UF
 # MAGIC
-# MAGIC Insumo do modelo de previsão. Agora que o eixo é a data de internação,
-# MAGIC a sazonalidade que aparecer aqui é real — na versão por competência ela
-# MAGIC ficava borrada pela cauda de faturamento.
+# MAGIC Insumo do modelo de previsão. Com o eixo na data de internação, a
+# MAGIC sazonalidade que aparece aqui é real: por competência, ela ficava
+# MAGIC borrada pela cauda de faturamento.
 
 # COMMAND ----------
 
@@ -337,10 +333,8 @@ display(sazonalidade
 # MAGIC %md
 # MAGIC ## 7. Exportação para parquet
 # MAGIC
-# MAGIC O painel precisa de um retrato local para funcionar mesmo se o banco da
-# MAGIC faculdade estiver fora do ar durante uma apresentação. Não é
-# MAGIC desconfiança do Oracle: é a diferença entre um pitch que trava ao vivo e
-# MAGIC um que continua.
+# MAGIC Retrato local para o painel continuar funcionando se o banco estiver
+# MAGIC indisponível durante uma apresentação.
 
 # COMMAND ----------
 
@@ -360,10 +354,10 @@ for tabela in TABELAS_OURO:
 # MAGIC %md
 # MAGIC ## 8. Carga no Oracle Database
 # MAGIC
-# MAGIC O DDL é gerado a partir do schema do Spark, o que evita divergência
-# MAGIC entre o modelo do lakehouse e o do banco. Os `COMMENT ON` são escritos
-# MAGIC em linguagem de negócio de propósito: são esses metadados que o tradutor
-# MAGIC de linguagem natural consome — o mesmo insumo que o Select AI usaria.
+# MAGIC O DDL é gerado a partir do schema do Spark, evitando divergência entre o
+# MAGIC lakehouse e o banco. Os `COMMENT ON` são escritos em linguagem de
+# MAGIC negócio porque alimentam o tradutor de linguagem natural — o mesmo
+# MAGIC insumo que o Select AI usaria.
 
 # COMMAND ----------
 
@@ -499,8 +493,6 @@ finally:
 # MAGIC %md
 # MAGIC ### Próximos passos
 # MAGIC
-# MAGIC 1. Baixar a Ouro para a estação local:
-# MAGIC    `py -m src.db.databricks_upload --baixar-ouro`
-# MAGIC 2. Modelo de previsão de demanda sobre `serie_temporal_uf`
-# MAGIC 3. Motor NL→SQL sobre os `COMMENT ON` das tabelas `T_SAUDE_*`
-# MAGIC 4. Painel Streamlit consultando o Oracle ao vivo
+# MAGIC 1. `py -m src.db.databricks_upload --baixar-ouro`
+# MAGIC 2. Modelo de previsão no notebook `05_previsao`
+# MAGIC 3. Painel Streamlit consultando o Oracle

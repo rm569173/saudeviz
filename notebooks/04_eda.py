@@ -2,25 +2,23 @@
 # MAGIC %md
 # MAGIC # SaúdeViz — Análise Exploratória de Dados
 # MAGIC
-# MAGIC **Challenge FIAP × Oracle 2026 · 1TSCOA · Lucas Ventura Araujo Ribas Colen — RM 569173**
+# MAGIC Challenge FIAP × Oracle 2026 · 1TSCOA · Lucas Ventura Araujo Ribas Colen — RM 569173
 # MAGIC
-# MAGIC Cada seção abaixo é uma **pergunta de negócio**, a **consulta SQL** que a
-# MAGIC responde e a **leitura do resultado**. As consultas rodam contra a camada
-# MAGIC Ouro — as mesmas tabelas `T_SAUDE_*` que estão no Oracle Database.
+# MAGIC Cada seção é uma pergunta de negócio, a consulta SQL que a responde e a
+# MAGIC leitura do resultado. As consultas rodam contra a camada Ouro, nas mesmas
+# MAGIC tabelas `T_SAUDE_*` que estão no Oracle.
 # MAGIC
-# MAGIC ## Cobertura das quatro frentes analíticas do desafio
+# MAGIC Cobre as quatro frentes analíticas do desafio:
 # MAGIC
-# MAGIC | Frente pedida pela Oracle | Onde está |
+# MAGIC | Frente | Onde está |
 # MAGIC |---|---|
-# MAGIC | 1. Exploração inicial — sazonalidade, rankings, comparações | Q3 a Q7 |
-# MAGIC | 2. Indicadores de capacidade — pressão assistencial | Q10 a Q12 |
-# MAGIC | 3. Padrões e agrupamentos | Q13 a Q15 |
-# MAGIC | 4. Explicabilidade — traduzir para linguagem de gestão | Leitura de cada bloco |
+# MAGIC | Exploração inicial | Q3 a Q7 |
+# MAGIC | Indicadores de capacidade | Q9 a Q11 |
+# MAGIC | Padrões e agrupamentos | Q12 a Q15 |
+# MAGIC | Explicabilidade | leitura de cada bloco |
 # MAGIC
-# MAGIC ## Recorte
-# MAGIC
-# MAGIC Região Sudeste (ES, MG, RJ, SP), internações **ocorridas** em 2024.
-# MAGIC 5.546.817 internações, 3.131 estabelecimentos com leito, 1.668 municípios.
+# MAGIC Recorte: Sudeste (ES, MG, RJ, SP), internações ocorridas em 2024 —
+# MAGIC 5.546.817 internações, 3.131 estabelecimentos com leito.
 
 # COMMAND ----------
 
@@ -89,11 +87,9 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Leitura:** a taxa de integração mede a qualidade do modelo dimensional.
-# MAGIC Hospitais do SIH sem correspondência no CNES são, em geral, unidades
-# MAGIC desativadas que ainda faturaram no período — comportamento esperado, e o
-# MAGIC motivo de usarmos `LEFT JOIN` e não `INNER`: perder internação real por
-# MAGIC falha de cadastro distorceria o volume.
+# MAGIC Hospitais do SIH sem correspondência no CNES costumam ser unidades
+# MAGIC desativadas que ainda faturaram no período. Por isso usamos `LEFT JOIN`:
+# MAGIC descartar internação real por falha de cadastro distorceria o volume.
 
 # COMMAND ----------
 
@@ -141,18 +137,15 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Leitura para a gestão:** a demanda hospitalar do Sudeste é **pouco
-# MAGIC sazonal** — a amplitude fica em torno de ±8%. Isso é um achado, não uma
-# MAGIC ausência de achado: significa que a pressão sobre o sistema é
-# MAGIC **estrutural e permanente**, não um pico que passa. Planejamento de leito
-# MAGIC não pode ser sazonal.
+# MAGIC A demanda hospitalar do Sudeste é pouco sazonal: a amplitude fica em
+# MAGIC torno de ±8%. A pressão é estrutural, não um pico que passa — e por isso
+# MAGIC o planejamento de leito também não pode ser sazonal.
 # MAGIC
-# MAGIC O vale de dezembro e janeiro é o efeito de férias e adiamento de
-# MAGIC cirurgias eletivas; o pico de abril é a retomada.
+# MAGIC O vale de dezembro e janeiro vem de férias e adiamento de cirurgias
+# MAGIC eletivas; abril é a retomada.
 # MAGIC
-# MAGIC 🚨 **Ressalva obrigatória:** dezembro tem cobertura de ~99,4%, porque
-# MAGIC internações de dezembro faturadas a partir de abril/2025 não entraram na
-# MAGIC ingestão. Parte da queda de dezembro é cobertura, não demanda.
+# MAGIC Ressalva: dezembro tem cobertura de ~99,4%, porque internações faturadas
+# MAGIC a partir de abril de 2025 não entraram. Parte da queda é cobertura.
 
 # COMMAND ----------
 
@@ -212,11 +205,9 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Leitura para a gestão:** esta é a lista que um secretário estadual usaria
-# MAGIC para decidir onde reforçar rede **antes** da próxima crise. O filtro de 500
-# MAGIC internações no primeiro semestre é deliberado: sem ele, um município que
-# MAGIC saiu de 2 para 6 internações apareceria com "crescimento de 200%" e
-# MAGIC contaminaria a decisão.
+# MAGIC É a lista para decidir onde reforçar a rede antes da próxima crise. O
+# MAGIC filtro de 500 internações no primeiro semestre evita que um município que
+# MAGIC saiu de 2 para 6 apareça com "crescimento de 200%".
 
 # COMMAND ----------
 
@@ -244,10 +235,9 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Leitura:** o **giro de leito** (internações por leito no ano) separa
-# MAGIC eficiência de tamanho. Dois hospitais com o mesmo número de leitos e giros
-# MAGIC muito diferentes têm perfis assistenciais distintos — ou eficiências
-# MAGIC distintas. É a pergunta que o gestor leva para a mesa.
+# MAGIC O giro de leito (internações por leito no ano) separa eficiência de
+# MAGIC tamanho. Dois hospitais com os mesmos leitos e giros diferentes têm
+# MAGIC perfis assistenciais ou eficiências distintas.
 
 # COMMAND ----------
 
@@ -293,15 +283,12 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Leitura para a gestão — este é um dos achados centrais do projeto.**
-# MAGIC
 # MAGIC Perfis com pressão relativa alta são invisíveis num painel que só conta
-# MAGIC internações, mas são exatamente os que travam leito. **Saúde mental** é o
-# MAGIC caso extremo: participação pequena no volume, participação várias vezes
-# MAGIC maior nos leitos-dia, com permanência média muito acima das demais.
+# MAGIC internações, mas são os que travam leito. Saúde mental é o caso extremo:
+# MAGIC pouco volume, muitos leitos-dia, permanência bem acima das demais.
 # MAGIC
-# MAGIC Consequência prática: abrir leito clínico não resolve pressão psiquiátrica.
-# MAGIC São redes diferentes, e o painel torna isso visível.
+# MAGIC Na prática: abrir leito clínico não resolve pressão psiquiátrica. São
+# MAGIC redes diferentes.
 
 # COMMAND ----------
 
@@ -357,13 +344,11 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Leitura para a gestão:** o gradiente por porte é a desigualdade
-# MAGIC estrutural que o projeto se propôs a medir. Metrópoles e municípios
-# MAGIC grandes operam próximos do limite; municípios pequenos têm leito ocioso.
+# MAGIC Metrópoles e municípios grandes operam perto do limite; municípios
+# MAGIC pequenos têm leito ocioso.
 # MAGIC
-# MAGIC Isso **não** significa excesso de leito no interior — significa que o
-# MAGIC paciente do interior se desloca para o centro, o que a próxima consulta
-# MAGIC demonstra com dado.
+# MAGIC Não significa excesso de leito no interior: significa que o paciente do
+# MAGIC interior se desloca para o centro, o que a Q12 demonstra.
 
 # COMMAND ----------
 
@@ -390,16 +375,15 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Leitura honesta — e isto precisa ser dito na apresentação:** ocupação
-# MAGIC acima de 1,0 é um **alerta para investigar**, não prova de colapso. Há
-# MAGIC três explicações possíveis, e o painel não distingue entre elas sozinho:
+# MAGIC Ocupação acima de 1,0 é alerta para investigar, não prova de colapso.
+# MAGIC Três explicações possíveis, que o indicador sozinho não distingue:
 # MAGIC
 # MAGIC 1. sobrecarga real da rede;
-# MAGIC 2. leito não atualizado no CNES, subestimando o denominador;
-# MAGIC 3. município polo que atende toda uma região de saúde.
+# MAGIC 2. leito desatualizado no CNES, subestimando o denominador;
+# MAGIC 3. município-polo que atende toda uma região de saúde.
 # MAGIC
-# MAGIC O valor da ferramenta é apontar **onde olhar**, reduzindo 1.668 municípios
-# MAGIC a uma lista de dezenas. A decisão continua humana.
+# MAGIC A ferramenta aponta onde olhar, reduzindo 1.668 municípios a uma lista de
+# MAGIC dezenas. A decisão continua humana.
 
 # COMMAND ----------
 
@@ -460,15 +444,13 @@
 # MAGIC %md
 # MAGIC ## Q12. Quem exporta paciente?
 # MAGIC
-# MAGIC **O diferencial da nossa análise.** A taxa de transferência responde à
-# MAGIC pergunta de capacidade de um ângulo que o volume não alcança: não é
-# MAGIC *"há muitas internações aqui"*, é ***"pacientes estão saindo daqui porque
-# MAGIC não há como tratá-los aqui"***.
+# MAGIC A taxa de transferência olha a capacidade por um ângulo que o volume não
+# MAGIC alcança: não é "há muitas internações aqui", é "pacientes saem daqui
+# MAGIC porque não há como tratá-los aqui".
 # MAGIC
-# MAGIC Esse dado veio da coluna `COBRANCA` do SIH, que estava fora do nosso
-# MAGIC recorte inicial de colunas. Foi incluída após validação empírica: os
-# MAGIC códigos 41–43 somaram exatamente o mesmo total da coluna `MORTE`,
-# MAGIC confirmando o mapeamento dos desfechos.
+# MAGIC O dado vem da coluna `COBRANCA` do SIH, incluída depois de validação
+# MAGIC empírica: os códigos 41 a 43 somaram exatamente o total da coluna
+# MAGIC `MORTE`, confirmando o mapeamento dos desfechos.
 
 # COMMAND ----------
 
@@ -514,19 +496,18 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Leitura para a gestão:** dois hospitais de porte parecido com taxas de
-# MAGIC transferência muito diferentes indicam **resolutividade** diferente. Para
-# MAGIC a secretaria, isso orienta onde investir em complexidade instalada em vez
-# MAGIC de simplesmente abrir mais leitos.
+# MAGIC Dois hospitais de porte parecido com taxas de transferência muito
+# MAGIC diferentes têm resolutividade diferente. Isso orienta onde investir em
+# MAGIC complexidade instalada, em vez de abrir mais leitos.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Q14. Outliers de ocupação — critério de Tukey
 # MAGIC
-# MAGIC **Técnica estatística:** detecção por intervalo interquartil
-# MAGIC (Q3 + 1,5 × IQR). Aqui o outlier superior **não é ruído a descartar** —
-# MAGIC é exatamente o município que a gestão precisa enxergar.
+# MAGIC Detecção por intervalo interquartil (Q3 + 1,5 × IQR). Aqui o outlier
+# MAGIC superior não é ruído a descartar: é o município que a gestão precisa
+# MAGIC enxergar.
 
 # COMMAND ----------
 
@@ -562,9 +543,8 @@
 # MAGIC %md
 # MAGIC ## Q15. Correlação entre os indicadores
 # MAGIC
-# MAGIC **Técnica estatística:** correlação de Pearson. Responde à frente de
-# MAGIC *explicabilidade* do desafio — quais fatores aparecem associados ao
-# MAGIC aumento da pressão assistencial?
+# MAGIC Correlação de Pearson: quais fatores aparecem associados ao aumento da
+# MAGIC pressão assistencial.
 
 # COMMAND ----------
 
@@ -581,11 +561,10 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Como ler correlação sem cair na armadilha:** correlação **não é causa**.
-# MAGIC Uma associação forte entre permanência e custo é quase tautológica —
-# MAGIC diária custa dinheiro. Já uma correlação **negativa** entre leitos por
-# MAGIC habitante e ocupação é informativa: mostra que onde há menos estrutura, a
-# MAGIC pressão é maior — o argumento central do projeto, agora quantificado.
+# MAGIC Correlação não é causa. A associação entre permanência e custo é quase
+# MAGIC tautológica: diária custa dinheiro. Já a correlação negativa entre leitos
+# MAGIC por habitante e ocupação é informativa — onde há menos estrutura, a
+# MAGIC pressão é maior.
 
 # COMMAND ----------
 

@@ -2,42 +2,20 @@
 # MAGIC %md
 # MAGIC # SaúdeViz — Previsão de demanda hospitalar
 # MAGIC
-# MAGIC **Challenge FIAP × Oracle 2026 · 1TSCOA · Lucas Ventura Araujo Ribas Colen — RM 569173**
+# MAGIC Challenge FIAP × Oracle 2026 · 1TSCOA · Lucas Ventura Araujo Ribas Colen — RM 569173
 # MAGIC
-# MAGIC **Objetivo de negócio:** estimar quantas internações cada UF terá nos
-# MAGIC próximos meses, para a secretaria dimensionar leito, equipe e orçamento
-# MAGIC **antes** da pressão acontecer.
+# MAGIC Estima quantas internações cada UF terá nos próximos meses, para
+# MAGIC dimensionar leito, equipe e orçamento com antecedência.
 # MAGIC
-# MAGIC ---
+# MAGIC Dois modelos, com finalidades diferentes:
 # MAGIC
-# MAGIC ## Dois modelos, dois papéis
-# MAGIC
-# MAGIC | Modelo | Papel | Resultado |
+# MAGIC | Modelo | Para que serve | Erro médio |
 # MAGIC |---|---|---|
-# MAGIC | **Perfil semanal + fator de feriado** | **Prever** | MAPE 5,5% a 6,3% de 7 a 90 dias |
-# MAGIC | **Regressão linear decomposta** | **Explicar** | MAPE 27% em 90 dias — reprovado como preditor |
+# MAGIC | Perfil semanal + fator de feriado | Prever | 5,5% a 6,3% (7 a 90 dias) |
+# MAGIC | Regressão linear decomposta | Explicar os fatores | 27% em 90 dias |
 # MAGIC
-# MAGIC O melhor modelo explicativo não foi o melhor preditivo, e este notebook
-# MAGIC mostra as duas coisas em vez de escolher a narrativa mais conveniente.
-# MAGIC
-# MAGIC ## Como chegamos aqui
-# MAGIC
-# MAGIC Três erros foram encontrados e corrigidos durante a modelagem. Estão
-# MAGIC registrados porque o processo importa tanto quanto o resultado:
-# MAGIC
-# MAGIC 1. **Modelo mensal com zero graus de liberdade.** A primeira versão usava
-# MAGIC    tendência mais 11 dummies de mês sobre 12 observações por UF — 12
-# MAGIC    parâmetros para 12 pontos. Trocamos para série diária (366 pontos).
-# MAGIC 2. **Dummy de dezembro estimada com uma observação.** Na validação
-# MAGIC    temporal, o treino terminava em 1º de dezembro, e `mes_12` aparecia em
-# MAGIC    um único dia. Trocamos dummies mensais por termos de Fourier.
-# MAGIC 3. **Baseline com vazamento de dados.** A baseline usava `shift(7)`, que
-# MAGIC    dentro da janela de teste consulta valores reais que ela não deveria
-# MAGIC    conhecer. Substituída por perfil calculado apenas com dados anteriores
-# MAGIC    ao corte.
-# MAGIC
-# MAGIC O erro do modelo caiu de 51% para 8% com as duas primeiras correções — e
-# MAGIC a terceira revelou que, mesmo assim, a abordagem simples era melhor.
+# MAGIC A regressão foi testada como preditor e perdeu. Ela permanece no notebook
+# MAGIC porque decompõe o efeito de cada fator, o que a previsão sozinha não faz.
 
 # COMMAND ----------
 
@@ -122,13 +100,12 @@ display(por_dia[["dia", "internacoes", "indice"]])
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Leitura para a gestão:** a queda de fim de semana não é falta de
-# MAGIC doente — é a rede eletiva parada. Urgência não escolhe dia. A distância
-# MAGIC entre o pico de segunda e o vale de domingo mede quanto da operação é
-# MAGIC programável, e portanto **remanejável**.
+# MAGIC A queda no fim de semana vem da rede eletiva parada, não de menos
+# MAGIC doentes: urgência não escolhe dia. A diferença entre segunda e domingo
+# MAGIC indica quanto da operação é programável.
 # MAGIC
-# MAGIC Esse padrão importa mais para o planejamento de escala do que a
-# MAGIC sazonalidade mensal, que é fraca (±8%).
+# MAGIC Para escala de equipe, esse padrão pesa mais que a sazonalidade mensal,
+# MAGIC que é fraca (±8%).
 
 # COMMAND ----------
 
@@ -140,9 +117,7 @@ display(por_dia[["dia", "internacoes", "indice"]])
 # MAGIC                 × fator de feriado, se o dia for feriado
 # MAGIC ```
 # MAGIC
-# MAGIC Dois parâmetros por UF: o perfil de sete dias e um fator de feriado.
-# MAGIC Simples de propósito — e, como a validação mostra, mais preciso que a
-# MAGIC regressão em todos os horizontes.
+# MAGIC São dois parâmetros por UF: o perfil de sete dias e o fator de feriado.
 
 # COMMAND ----------
 
@@ -192,18 +167,17 @@ display(pd.DataFrame([
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC **Leitura:** o fator é consistente entre os quatro estados — um feriado
-# MAGIC reduz as internações em torno de um quarto. Consistência entre unidades
-# MAGIC independentes é indício de que o parâmetro captura um fenômeno real, e
-# MAGIC não ruído de uma série específica.
+# MAGIC O fator fica em torno de 0,73 nos quatro estados: um feriado reduz as
+# MAGIC internações em cerca de um quarto. A consistência entre estados
+# MAGIC independentes indica que o efeito é real, e não ruído de uma série.
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## 4. Modelo explicativo — regressão decomposta
 # MAGIC
-# MAGIC Não é o preditor final. Serve para **quantificar** cada componente:
-# MAGIC quanto pesa o dia da semana, quanto pesa o feriado, se há tendência.
+# MAGIC Não é o preditor final. Quantifica o peso de cada componente: dia da
+# MAGIC semana, feriado e tendência.
 
 # COMMAND ----------
 
