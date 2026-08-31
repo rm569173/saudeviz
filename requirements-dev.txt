@@ -10,3 +10,9 @@ dbfread==2.0.7
 
 # Transferencia com o Databricks
 databricks-sdk==0.133.0
+
+# Geracao dos documentos de entrega por codigo: o diagrama de arquitetura
+# (docs/gera_diagrama.py) e o PPTX (docs/gera_ppt.py). Sem estes, os dois
+# scripts falham na importacao.
+python-pptx==1.0.2
+Pillow==11.3.0

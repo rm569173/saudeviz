@@ -43,7 +43,7 @@ R$ 10,03 bi   pagos pelo SUS no período
 |---|---|
 | 3 fontes: SQL, JSON e CSV | ✅ Entregue |
 | Medallion Bronze → Prata → Ouro | ✅ Entregue, em PySpark no Databricks |
-| Oracle Database como camada Gold | ✅ Entregue, 9 tabelas `T_SAUDE_*` |
+| Oracle Database como camada Gold | ✅ Entregue, 11 tabelas `T_SAUDE_*` |
 | Análise preditiva | ✅ Entregue |
 | Oracle Select AI | ⚠️ Indisponível na instância da FIAP — mecanismo equivalente implementado |
 | External Table do CSV | ⚠️ Sem privilégio na conta acadêmica — DDL entregue |

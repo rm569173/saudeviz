@@ -11,6 +11,17 @@ todo.
 > **R$ 10,0 bilhões** pagos · **3.131 estabelecimentos** com leito ·
 > **1.668 municípios**
 
+| | |
+|---|---|
+| 🖥️ **Painel no ar** | https://saudeviz.streamlit.app |
+| 📋 **Quadro Kanban** | https://trello.com/b/3XTAInGQ |
+| 💾 **Repositório** | https://github.com/rm569173/saudeviz |
+
+O painel consulta o **Oracle 19c da FIAP em tempo real**. A barra lateral
+informa a origem do dado: se o banco não responder em 8 segundos, ele cai para
+o retrato local e diz isso na tela — resultado de contingência nunca se passa
+por dado ao vivo.
+
 ---
 
 ## O problema
@@ -40,12 +51,14 @@ O SaúdeViz responde às três em segundos — e aceita a pergunta em português
   API agregados            │  Ouro       │      └──────┬───────┘
                            └─────────────┘             │
                              PySpark + Delta           ▼
-                                                ┌──────────────┐
-                                                │  Streamlit   │
-                                                │              │
-                                                │  painel      │
-                                                │  NL→SQL      │
-                                                └──────────────┘
+  Open-Meteo (JSON) ─ ─ ─ ─ ─ ─ ─┐               ┌──────────────┐
+  clima diário                   │               │  Streamlit   │
+                                 ▼               │              │
+                          ┌─────────────┐        │  painel      │
+                          │ 06_clima    │        │  NL→SQL      │
+                          │ teste de    │        └──────────────┘
+                          │ hipóteses   │
+                          └─────────────┘
 ```
 
 **Os três formatos exigidos pelo desafio, cada um com propósito:**
@@ -53,8 +66,19 @@ O SaúdeViz responde às três em segundos — e aceita a pergunta em português
 | Fonte | Formato | Por que este formato | Volume |
 |---|---|---|---|
 | SIH/SUS | Relacional | Agregações e filtros sobre 33 colunas de AIH | 7.015.106 registros |
-| CNES | JSON via API | Atributos variam por estabelecimento — nem todo hospital preenche os mesmos campos | 4.481 estabelecimentos |
+| CNES | JSON via API | Atributos variam por estabelecimento — nem todo hospital preenche os mesmos campos | 4.481 estabelecimentos + 18.644 leitos |
 | IBGE | CSV | Enriquecimento cadastral, lido diretamente | 5.571 municípios |
+
+**E uma quarta fonte, que não era exigida:**
+
+| Fonte | Formato | Para quê | Volume |
+|---|---|---|---|
+| Open-Meteo | JSON via API | Testar hipóteses que os dados de saúde sozinhos não respondem | 366 dias × 4 capitais |
+
+A fonte de clima **não passa pelo Medallion**, e isso é deliberado: ela não faz
+parte do modelo dimensional que o painel consulta. O notebook `06_clima` lê o
+parquet direto da landing zone e faz uma análise fechada em si mesma. Empurrá-la
+para Bronze/Prata/Ouro adicionaria três tabelas que nenhuma tela usa.
 
 ## O que descobrimos no caminho
 
@@ -105,6 +129,27 @@ O sinal previsível está no **ciclo semanal** (sábado e domingo caem ~40%) e n
 Reconhecer isso valeu mais que forçar complexidade sobre um fenômeno que não a
 comporta.
 
+### 4. Chuva não explica acidente; frio se associa a internação respiratória
+
+Com a quarta fonte, duas hipóteses testadas e uma refutada:
+
+| Hipótese | Resultado |
+|---|---|
+| Chuva aumenta internação por acidente | **Refutada.** −0,7%, e sem gradiente por intensidade da chuva |
+| Frio aumenta internação respiratória | **Confirmada.** +9,2%, com gradiente monotônico nas quatro capitais |
+
+O teste de gradiente é o que separa achado de coincidência: se a chuva causasse
+acidentes, o efeito cresceria de chuva fraca para forte. Ele sobe e desce sem
+padrão.
+
+**A ressalva está declarada:** dias frios concentram-se no inverno, que também
+tem mais circulação viral. Os 9,2% podem ser efeito da temperatura, da
+sazonalidade, ou dos dois. É associação, não causa — separar exigiria dados de
+circulação viral por semana epidemiológica.
+
+Um resultado nulo bem medido vale tanto quanto um positivo: mostra que a
+hipótese foi testada, e não escolhida depois de ver o dado.
+
 ## Sobre o Select AI
 
 O **Select AI** da Oracle traduz linguagem natural em SQL usando os `COMMENT ON`
@@ -137,16 +182,18 @@ saudeviz/
 │   ├── 02_prata.py               limpeza, tipagem, decodificação
 │   ├── 03_ouro.py                star schema + carga no Oracle
 │   ├── 04_eda.py                 16 consultas SQL documentadas
-│   └── 05_previsao.py            modelos preditivo e explicativo
+│   ├── 05_previsao.py            modelo de previsão de demanda
+│   └── 06_clima.py               teste de hipóteses clima × internação
 ├── src/
 │   ├── config.py                 parâmetros do projeto
-│   ├── ingestao/                 as três fontes
+│   ├── ingestao/                 as quatro fontes
 │   ├── medallion/                implementação de referência em pandas
 │   ├── db/                       DDL Oracle, carga, Databricks
 │   ├── analytics/                EDA e modelos (versão local)
 │   └── selectai/                 tradutor NL→SQL e dicionário de dados
 ├── dados/ouro/                   camada Gold versionada (~6 MB)
-├── docs/                         documentação de apoio
+├── apresentação/                 evidências: 53 prints + o diagrama
+├── docs/                         roteiro do pitch, kanban, checklist
 └── testar_conexao.py             diagnóstico do ambiente Oracle
 ```
 
@@ -158,7 +205,7 @@ saudeviz/
 pip install -r requirements-dev.txt
 ```
 
-### 2. Ingestão das três fontes
+### 2. Ingestão das fontes
 
 ```bash
 py -m src.ingestao.extrai_sih      # SIH/SUS via FTP do DATASUS
@@ -166,7 +213,11 @@ py -m src.ingestao.extrai_leitos   # leitos do CNES
 py -m src.ingestao.extrai_ibge     # população municipal (gera o CSV)
 py -m src.medallion.prata          # necessário antes do CNES
 py -m src.ingestao.extrai_cnes     # estabelecimentos via API REST
+py -m src.ingestao.extrai_clima    # clima diário das capitais (Open-Meteo)
 ```
+
+O `extrai_cnes` roda depois da Prata de propósito: ele busca só os CNES que
+aparecem nas internações, em vez de varrer o cadastro inteiro.
 
 O recorte (UFs e período) é parametrizado em
 [`src/config.py`](src/config.py).
@@ -174,7 +225,11 @@ O recorte (UFs e período) é parametrizado em
 ### 3. Pipeline no Databricks
 
 Importe os notebooks de `notebooks/` no workspace e execute na ordem
-`01` → `02` → `03` → `05`. O envio dos arquivos para a landing zone:
+`01` → `02` → `03`. Depois, em qualquer ordem: `04` (análise exploratória),
+`05` (previsão) e `06` (clima). O `00` é só o teste de conectividade com o
+Oracle, e vale rodar antes de tudo.
+
+O envio dos arquivos para a landing zone:
 
 ```bash
 py -m src.db.databricks_upload
@@ -192,6 +247,23 @@ as funcionalidades continuam disponíveis; a interface informa a origem do dado.
 
 Para conectar ao Oracle, copie `.streamlit/secrets.toml.exemplo` para
 `.streamlit/secrets.toml` e preencha.
+
+### 5. Documentos gerados por código
+
+O diagrama de arquitetura, o PPTX de entrega e o teleprompter do pitch não
+foram montados à mão:
+
+```bash
+py docs/gera_diagrama.py   # apresentação/arquitetura_solucao.png
+py docs/gera_ppt.py        # o .pptx completo, 49 slides
+py docs/mede_pitch.py      # cronometra o roteiro e gera o teleprompter
+```
+
+O motivo é o mesmo nos três: os números vêm do pipeline e mudam. Um slide
+editado à mão vira número desatualizado em silêncio; um slide gerado é
+reconstruído em segundos. O `mede_pitch` existe porque a primeira versão do
+roteiro tinha 5min58s de fala num limite de 5 minutos — e ninguém percebeu,
+porque o tempo estava estimado no olho em vez de contado.
 
 ## Segurança
 

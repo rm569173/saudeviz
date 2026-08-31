@@ -70,7 +70,7 @@ Serve à **4ª entrega** (modelos e técnicas) e à **5ª** (evidências visuais
 |---|---|---|---|
 | 1 | `eda_q01_tres_fontes.png` | Q1 completa | Prova que as 3 fontes e os 3 formatos foram integrados |
 | 2 | `eda_q02_integracao.png` | Q2 completa | 99,8% de integração entre SIH, CNES e IBGE |
-| 3 | `eda_q03_sazonalidade.png` | Q3 + **gráfico de linha** | Mostra o cuidado com dias do mês |
+| 3 | `eda_q03_sazonalidade_grafico.png` | Q3 + **gráfico de linha** | Mostra o cuidado com dias do mês |
 | 4 | `eda_q05_crescimento.png` | Q5 completa | Responde "onde as internações crescem" |
 | 5 | `eda_q07_pressao_perfil.png` | Q7 + **gráfico de barras** | ⭐ O achado de saúde mental |
 | 6 | `eda_q09_ocupacao_porte.png` | Q9 + **gráfico de barras** | Gradiente de ocupação por porte |
@@ -92,12 +92,12 @@ Serve à **2ª entrega** (MVP implementado) e à **3ª** (arquitetura).
 
 | # | Arquivo | Onde | O que mostra |
 |---|---|---|---|
-| 13 | `pipeline_bronze_resumo.png` | `01_bronze`, célula final | Contagem das 4 tabelas Bronze |
+| 13 | `pipeline_bronze_contagem.png` | `01_bronze`, célula final | Contagem das 4 tabelas Bronze |
 | 14 | `pipeline_prata_defasagem.png` | `02_prata`, validação | ⭐ A tabela de defasagem de faturamento |
 | 15 | `pipeline_ouro_situacao.png` | `03_ouro`, célula 4 | Distribuição Folga/Atenção/Crítica |
-| 16 | `pipeline_ouro_ranking.png` | `03_ouro`, célula 5 | Top 10 hospitais |
-| 17 | `pipeline_carga_oracle.png` | `03_ouro`, célula 9 | ⭐ Conferência Oracle × Databricks, tudo "sim" |
-| 18 | `catalog_databricks.png` | menu **Catalog** | Os 3 schemas `saudeviz_*` com as tabelas |
+| 16 | `pipeline_prata_por_ano.png` | `02_prata`, validação | Registros por ano de internação, provando o recorte |
+| 17 | `pipeline_ouro_carga_oracle.png` | `03_ouro`, célula 9 | ⭐ Conferência Oracle × Databricks, tudo "sim" |
+| 18 | `databricks_catalog_medallion.png` | menu **Catalog** | Os 3 schemas `saudeviz_*` com as tabelas |
 
 ---
 
@@ -109,7 +109,6 @@ Serve à **4ª entrega**.
 |---|---|---|---|
 | 19 | `modelo_dia_semana.png` | `05_previsao`, célula 2 | Queda de ~40% no fim de semana |
 | 20 | `modelo_fator_feriado.png` | `05_previsao`, célula 3 | Feriado reduz 26%, consistente nas 4 UFs |
-| 21 | `modelo_coeficientes.png` | `05_previsao`, célula 4 | Efeito percentual por dia da semana |
 | 22 | `modelo_comparativo_horizonte.png` | `05_previsao`, célula 6 | ⭐ Regressão degrada de 6% para 27% |
 
 ---
@@ -121,9 +120,9 @@ prova de que a camada Gold está no Oracle**, e não só num parquet.
 
 | # | Arquivo | O que rodar |
 |---|---|---|
-| 23 | `oracle_tabelas.png` | `SELECT table_name, num_rows FROM user_tables WHERE table_name LIKE 'T_SAUDE%' ORDER BY 1;` |
-| 24 | `oracle_comentarios.png` | `SELECT table_name, comments FROM user_tab_comments WHERE table_name LIKE 'T_SAUDE%';` |
-| 25 | `oracle_consulta_negocio.png` | Uma consulta de negócio real, ex. o Top 10 de hospitais |
+| 23 | `oracle_contagem_tabelas.png` | `SELECT table_name, num_rows FROM user_tables WHERE table_name LIKE 'T_SAUDE%' ORDER BY 1;` |
+| 24 | `oracle_comentarios_metadados.png` | `SELECT table_name, comments FROM user_tab_comments WHERE table_name LIKE 'T_SAUDE%';` |
+| 25 | `oracle_top10_hospitais.png` | Uma consulta de negócio real, ex. o Top 10 de hospitais |
 
 O print 24 é mais importante do que parece: são esses `COMMENT ON` que
 alimentam o tradutor NL→SQL, e mostrá-los conecta o modelo de dados ao Select AI.
@@ -209,7 +208,31 @@ Serve à **6ª entrega**.
 | # | Arquivo | O que mostra |
 |---|---|---|
 | 37 | `github_repositorio.png` | Página inicial com o README renderizado |
-| 38 | `github_estrutura.png` | Árvore de pastas expandida |
+| 38 | `github_repositorio.png` | Árvore de pastas expandida |
+
+---
+
+## Capturados além do previsto
+
+Prints feitos durante a execução que não estavam no plano inicial. Vários
+entraram no PPT, então ficam registrados aqui.
+
+| Arquivo | O que mostra | Usado no PPT |
+|---|---|---|
+| `trello.png` | O quadro Kanban completo, com as 5 listas | sim, slide 6 |
+| `oracle_arvore_tabelas.png` | Árvore de objetos do SQL Developer | sim, slide 16 |
+| `oracle_integridade_totais.png` | ⭐ As três tabelas fechando no mesmo total | sim, slide 17 |
+| `oracle_municipios_criticos.png` | Consulta de municípios críticos no Oracle | não |
+| `oracle_perfis_pressao.png` | Consulta de pressão por perfil no Oracle | não |
+| `eda_q03_sazonalidade_tabela.png` | A tabela por trás do gráfico de sazonalidade | não |
+| `eda_q04_comparativo_uf.png` | Comparativo entre as quatro UFs | não |
+| `eda_q06_top_hospitais.png` | Top 10 hospitais por volume | não |
+| `eda_q07_pressao_grafico.png` | ⭐ Pressão relativa por perfil | sim, slide 23 |
+| `eda_q13_resolutividade.png` | Resolutividade por município | não |
+
+Os que não entraram no PPT continuam valendo: são a reserva caso um slide
+precise trocar de imagem, e provam profundidade de exploração para quem abrir
+a pasta.
 
 ---
 
