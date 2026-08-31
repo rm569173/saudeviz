@@ -130,6 +130,19 @@ alimentam o tradutor NL→SQL, e mostrá-los conecta o modelo de dados ao Select
 
 ---
 
+## Imagem gerada — arquitetura
+
+Não é print: é imagem gerada por código, para o slide 10.
+
+| # | Arquivo | Origem | Feito |
+|---|---|---|---|
+| — | `arquitetura_solucao.png` | `py docs/gera_diagrama.py` | ✅ |
+
+Regerar depois de qualquer mudança de número no pipeline — a imagem lê a
+paleta de `app/tema.py` e traz os totais das camadas no corpo.
+
+---
+
 ## Tela 5 — Painel Streamlit
 
 Serve à **2ª entrega** (MVP) e à **5ª** (evidências). ⭐ São os prints mais

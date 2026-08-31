@@ -93,14 +93,11 @@ atendimentos.
 ## 3ª entrega — Arquitetura final implementada
 
 ### Slide 10 — Desenho da arquitetura
-🖼️ Diagrama do fluxo de dados
-```
-FTP DATASUS ─┐
-API CNES    ─┼─► Databricks ─► Oracle 19c ─► Streamlit
-CSV IBGE    ─┘   Bronze         camada Gold    painel
-                 Prata          T_SAUDE_*      NL→SQL
-                 Ouro
-```
+🖼️ `arquitetura_solucao.png` — ocupar o slide inteiro, sem título por cima
+(o diagrama já traz o seu).
+
+Gerado por `docs/gera_diagrama.py`, com as mesmas cores do painel. Se algum
+número mudar, rode o script de novo em vez de editar a imagem.
 
 ### Slide 11 — O que roda onde, e por quê
 | Etapa | Onde | Motivo |
