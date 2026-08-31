@@ -184,6 +184,12 @@ def ingere(ano: int = 2024, reprocessar: bool = False) -> pd.DataFrame:
 
     df.to_csv(DESTINO_RAW / "clima_capitais.csv", index=False,
               sep=";", encoding="utf-8")
+
+    # O pandas grava data com precisao de nanossegundos, que o Spark recusa
+    # ao ler parquet (PARQUET_TYPE_ILLEGAL: TIMESTAMP(NANOS)). Microssegundos
+    # e a maior precisao que os dois lados aceitam, e para uma serie diaria
+    # sobra resolucao de qualquer forma.
+    df["data"] = df["data"].astype("datetime64[us]")
     df.to_parquet(alvo, index=False)
 
     log.info("Bronze clima: %s linhas x %s colunas", *df.shape)
