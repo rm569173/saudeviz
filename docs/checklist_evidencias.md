@@ -143,7 +143,8 @@ importantes do PPT.
 | 29 | `painel_04_perfis_pressao.png` | Perfis de atendimento | ⭐ Gráfico de pressão relativa | ✅ |
 | 30 | `painel_05_previsao_serie.png` | Previsão de demanda | Série com intervalo de confiança | ✅ |
 | 31 | `painel_06_previsao_modelos.png` | Previsão, rolado | Comparativo de modelos + efeito do dia da semana | ✅ |
-| 32 | `painel_07_dimensionamento.png` | Previsão, fim da página | ⭐ Curva de leitos necessários mês a mês + os 4 cartões | ✅ |
+| 32 | `painel_07_dimensionamento.png` | Previsão, fim da página | ⭐ Vitória — folga de 198 leitos (14%), mensagem verde | ✅ |
+| 32b | `painel_07b_dimensionamento_bh.png` | Previsão, fim da página | ⭐ Belo Horizonte — folga de 408 leitos (6%), alerta amarelo | ✅ |
 | 33 | `painel_08_nlsql_exemplos.png` | Pergunte em português | Caixa de pergunta + os 8 exemplos | ✅ |
 | 34 | `painel_09_nlsql_intencao.png` | Pergunte — "quais hospitais mais transferem pacientes?" | ⭐ Intenção 80% + SQL sobre `T_SAUDE_RANK_HOSPITAIS` + resultado | ✅ |
 | 35 | `painel_10_nlsql_sql.png` | Pergunte — "onde a capacidade está sendo ultrapassada?" | ⭐ Intenção 75% + SQL sobre `T_SAUDE_IND_CAPACIDADE_MUNICIPAL` + "10 linhas retornadas do Oracle Database" | ✅ |
@@ -153,9 +154,10 @@ Os prints 34 e 35 são **duas perguntas diferentes**, cada uma completa da
 pergunta ao resultado. Provam que o tradutor escolhe a tabela pela intenção —
 mais forte do que fatiar uma única consulta em três imagens.
 
-**No print 32** (`painel_07_dimensionamento`), selecione **Belo Horizonte**: é a capital com a menor folga no
-pico (408 leitos, 6% da capacidade) e a única em que o painel dispara o alerta
-amarelo. Serve melhor à narrativa do que uma capital folgada.
+**Os prints 32 e 32b são a mesma tela em duas capitais**, e é assim que vale
+usar no slide: Vitória com 14% de folga e mensagem verde, Belo Horizonte com 6%
+e alerta amarelo. A mesma ferramenta, dois veredictos opostos — mostra que o
+painel avalia, não só desenha.
 
 **Dica:** capture com a barra lateral visível. Ela mostra o nome do projeto, seu
 RM e o modo de conexão — contexto de graça em cada print.
