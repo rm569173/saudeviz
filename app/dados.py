@@ -89,6 +89,24 @@ def _testa_oracle() -> tuple[bool, str]:
             return False, "Conectado, mas nenhuma tabela T_SAUDE_ encontrada."
         return True, f"Oracle Database 19c - {total} tabelas T_SAUDE_"
     except Exception as erro:
+        # Diagnostico enviado para os LOGS do app, nunca para a interface: os
+        # logs sao privados ao dono do app, e a interface e publica.
+        #
+        # Reporta apenas COMPRIMENTO e presenca de espacos nas bordas. Isso
+        # distingue as tres causas de ORA-01017 sem revelar a credencial:
+        # senha truncada pelo TOML, espaco colado junto, ou senha errada mesmo.
+        usuario = credenciais.get("user", "")
+        senha = credenciais.get("password", "")
+        dsn = credenciais.get("dsn", "")
+        print("[SaudeViz] Falha ao conectar no Oracle. Diagnostico da credencial:")
+        print(f"[SaudeViz]   user  : {len(usuario)} caracteres, "
+              f"espacos nas bordas: {usuario != usuario.strip()}")
+        print(f"[SaudeViz]   senha : {len(senha)} caracteres, "
+              f"espacos nas bordas: {senha != senha.strip()}")
+        print(f"[SaudeViz]   dsn   : {len(dsn)} caracteres, "
+              f"comeca com '(DESCRIPTION': {dsn.startswith('(DESCRIPTION')}")
+        print(f"[SaudeViz]   erro  : {type(erro).__name__}: "
+              f"{str(erro).splitlines()[0][:120]}")
         return False, f"{type(erro).__name__}: {str(erro).splitlines()[0][:90]}"
 
 
