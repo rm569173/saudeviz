@@ -479,17 +479,20 @@ INTENCOES = {
 
 # Perguntas de exemplo mostradas no painel — todas conectadas ao problema de
 # negocio descrito pela Oracle no material do challenge.
+# Acentuadas de proposito: sao o que o usuario le na tela, e a pagina se chama
+# "Pergunte em portugues". O reconhecimento nao muda, porque normaliza() tira
+# o acento antes de comparar com o vocabulario.
 PERGUNTAS_EXEMPLO = [
-    "Quais municipios tiveram maior crescimento de internacoes no ultimo semestre?",
-    "Onde a capacidade hospitalar esta sendo ultrapassada?",
+    "Quais municípios tiveram maior crescimento de internações no último semestre?",
+    "Onde a capacidade hospitalar está sendo ultrapassada?",
     "Quais perfis de atendimento mais pressionam o sistema?",
-    "Quais hospitais tem maior permanencia media em Sao Paulo?",
+    "Quais hospitais têm maior permanência média em São Paulo?",
     "Quais hospitais mais transferem pacientes?",
     "Quantos leitos faltam em cada estado para atingir a meta da OMS?",
-    "Compare o volume de internacoes por estado",
-    "Como as internacoes variam por dia da semana?",
-    "Qual a previsao de internacoes para os proximos meses em Minas Gerais?",
-    "Mostre a evolucao mensal de internacoes no Rio de Janeiro",
+    "Compare o volume de internações por estado",
+    "Como as internações variam por dia da semana?",
+    "Qual a previsão de internações para os próximos meses em Minas Gerais?",
+    "Mostre a evolução mensal de internações no Rio de Janeiro",
 ]
 
 
