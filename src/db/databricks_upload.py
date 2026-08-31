@@ -169,6 +169,11 @@ def envia_bronze() -> None:
         arquivos.append((config.CSV_POPULACAO,
                          f"{RAIZ_VOLUME}/ibge/{config.CSV_POPULACAO.name}"))
 
+    # Fonte 4 - clima diario das capitais, para o cruzamento com internacoes
+    origem = config.BRONZE / "clima" / "clima_diario.parquet"
+    if origem.exists():
+        arquivos.append((origem, f"{RAIZ_VOLUME}/clima/clima_diario.parquet"))
+
     total_bytes = sum(o.stat().st_size for o, _ in arquivos)
     log.info("Enviando %s arquivos (%.1f MB) para %s",
              len(arquivos), total_bytes / 1e6, RAIZ_VOLUME)

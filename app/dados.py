@@ -48,12 +48,26 @@ TABELAS = {
 }
 
 
+# Tempo maximo esperando o banco responder, em segundos.
+#
+# Sem isso o driver espera indefinidamente, e o painel trava na tela de
+# carregamento em vez de cair para o retrato local: o teste de conexao roda no
+# primeiro carregamento, antes de qualquer coisa ser desenhada. O fallback so
+# tem valor se a falha for rapida.
+TIMEOUT_CONEXAO = 8
+TIMEOUT_CONSULTA = 60
+
+
 def _credenciais() -> dict[str, str] | None:
     """Le as credenciais do Oracle sem nunca grava-las em disco."""
+    base = {
+        "tcp_connect_timeout": TIMEOUT_CONEXAO,
+        "retry_count": 0,
+    }
     try:
         secrets = st.secrets["oracle"]
         return {"user": secrets["user"], "password": secrets["password"],
-                "dsn": secrets["dsn"]}
+                "dsn": secrets["dsn"], **base}
     except Exception:
         pass
 
@@ -61,7 +75,7 @@ def _credenciais() -> dict[str, str] | None:
     senha = os.getenv("ORACLE_PASSWORD")
     dsn = os.getenv("ORACLE_DSN")
     if usuario and senha and dsn:
-        return {"user": usuario, "password": senha, "dsn": dsn}
+        return {"user": usuario, "password": senha, "dsn": dsn, **base}
     return None
 
 
@@ -95,7 +109,7 @@ def _testa_oracle() -> tuple[bool, str]:
         # Reporta apenas COMPRIMENTO e presenca de espacos nas bordas. Isso
         # distingue as tres causas de ORA-01017 sem revelar a credencial:
         # senha truncada pelo TOML, espaco colado junto, ou senha errada mesmo.
-        usuario = credenciais.get("user", "")
+        usuario = str(credenciais.get("user", ""))
         senha = credenciais.get("password", "")
         dsn = credenciais.get("dsn", "")
         print("[SaudeViz] Falha ao conectar no Oracle. Diagnostico da credencial:")
@@ -138,6 +152,7 @@ def consulta_oracle(sql: str) -> pd.DataFrame:
         raise RuntimeError("Credenciais do Oracle nao configuradas.")
 
     with oracledb.connect(**credenciais) as conexao:
+        conexao.call_timeout = TIMEOUT_CONSULTA * 1000  # milissegundos
         with conexao.cursor() as cursor:
             cursor.arraysize = LINHAS_POR_BUSCA
             cursor.prefetchrows = LINHAS_POR_BUSCA + 1
