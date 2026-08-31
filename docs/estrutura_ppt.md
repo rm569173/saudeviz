@@ -216,6 +216,18 @@ parada, não menos doentes.
 ### Slide 23 — Previsão de demanda no painel
 🖼️ `painel_05_previsao_serie.png`
 
+### Slide 23b — Quantos leitos, e quando abrir
+🖼️ `painel_07_dimensionamento.png`
+```
+Belo Horizonte  ·  6.312 leitos cadastrados
+
+Demanda comum      5.107 leitos abertos o ano inteiro
+Pico (abril)       5.904  →  +797 leitos sazonais
+Folga no pico        408  →  6% da capacidade
+```
+A curva mensal diz ao gestor **quando** acionar capacidade extra e **qual é o
+piso** que não pode ser desmobilizado. Abril é o pico nas quatro capitais.
+
 ### Slide 24 — Consultas na camada Gold
 🖼️ `oracle_top10_hospitais.png`
 ```
@@ -236,13 +248,103 @@ Embu-Guaçu/SP: 1.460 internações, 1.082 transferências, 15 leitos
 
 ---
 
+## Análise complementar — clima e internação
+
+Não é entrega obrigatória. Responde ao critério de **inovação**: *"o quanto o
+grupo foi além do esperado"*.
+
+### Slide 26b — Uma quarta fonte
+🖼️ `clima_01_fonte.png`
+```
+Open-Meteo · clima diário das 4 capitais · 2024
+
+1.464 dias-capital · 526 com chuva
+1.421.225 internações nas capitais
+
+Três hipóteses testadas:
+  chuva aumenta acidentes?
+  frio aumenta doença respiratória?
+  a estação do ano importa além do ciclo semanal?
+```
+
+### Slide 26c — Chuva não explica acidentes
+🖼️ `clima_02_chuva_acidentes.png` · `clima_03_gradiente_chuva.png`
+```
+Com chuva   104,4 acidentes/dia
+Sem chuva   105,1
+variação     −0,7%
+
+E sem gradiente por intensidade:
+  Sem chuva      693 dias   105,4
+  Chuva fraca    254        103,0
+  Chuva moderada  85        110,4
+  Chuva forte     16         83,1
+
+Hipótese refutada.
+```
+O teste de gradiente é o que separa achado de coincidência. Se a chuva causasse
+acidentes, o efeito cresceria com a intensidade. Sobe e desce sem padrão — e os
+83,1 da chuva forte vêm de 16 dias apenas.
+
+**Consequência prática:** o planejamento hospitalar não deve reservar
+capacidade para dias de chuva. Não há efeito a antecipar.
+
+### Slide 26d — Frio se associa a internação respiratória
+🖼️ `clima_04_frio_respiratoria.png`
+```
+Muito frio   73,7 internações/dia
+Quente       67,5
+variação     +9,2%
+
+Gradiente monotônico nas quatro capitais:
+
+Capital           Muito frio   Frio   Ameno   Quente
+Belo Horizonte          61,9   59,5    52,1     50,0
+Rio de Janeiro          50,5   49,8    47,8     43,6
+São Paulo              175,1  175,4   161,0    163,9
+```
+As faixas são quartis calculados dentro de cada capital: 18 °C é frio em
+Vitória e ameno em São Paulo.
+
+### Slide 26e — Só a temperatura mínima importa
+🖼️ `clima_05_correlacao.png`
+```
+                temp_min   temp_max    chuva
+Belo Horizonte    −0,306      0,020   −0,244
+Rio de Janeiro    −0,185     −0,001   −0,129
+Vitória           −0,148     −0,055   −0,181
+São Paulo         −0,107      0,062   −0,139
+```
+A temperatura **máxima não tem correlação** — ronda zero nas quatro cidades.
+É o frio da madrugada que se relaciona com internação respiratória, não o
+calor do dia.
+
+### Slide 26f — A ressalva que o próprio dado revela
+```
+A chuva aparece com correlação NEGATIVA: dias chuvosos têm menos internação
+respiratória.
+
+Contraintuitivo — até lembrar que no Sudeste chove no verão e a seca é no
+inverno. A chuva está medindo a ESTAÇÃO, não a si mesma.
+
+O mesmo confundimento pode valer para o frio: dias frios concentram-se no
+inverno, que também tem mais circulação viral. Os 9,2% podem ser efeito da
+temperatura, da sazonalidade viral, ou dos dois.
+
+É associação, não causa.
+```
+Separar os dois efeitos exigiria dados de circulação viral por semana
+epidemiológica — fora do escopo desta sprint, e registrado como próximo passo.
+
+---
+
 ## Select AI
 
 ### Slide 27 — Perguntas em linguagem natural
-🖼️ `painel_07_nlsql_exemplos.png` · `painel_08_nlsql_intencao.png`
+🖼️ `painel_08_nlsql_exemplos.png` · `painel_09_nlsql_intencao.png`
 
 ### Slide 28 — O SQL gerado e executado
-🖼️ `painel_09_nlsql_sql.png` · `painel_10_nlsql_resultado.png`
+🖼️ `painel_10_nlsql_sql.png` · `painel_11_nlsql_resultado.png`
 ```
 O SQL continua sendo gerado e executado no Oracle. O tradutor remove a
 barreira da sintaxe para quem decide.
@@ -313,7 +415,8 @@ Duração: até 5 minutos
 
 ### Slide 34 — Próximos passos
 ```
-· Cruzar com dados de clima: chuva e acidentes, frio e doença respiratória
+· Separar o efeito do frio do efeito da sazonalidade viral, cruzando com
+  dados de circulação respiratória por semana epidemiológica
 · Estender ao Brasil inteiro — o pipeline já é parametrizado
 · Migrar para o Autonomous Database e ativar o Select AI nativo
 ```

@@ -424,6 +424,122 @@ def pagina_previsao(ufs: tuple[str, ...]) -> None:
         except Exception as erro:
             st.info(f"Coeficientes indisponíveis: {erro}")
 
+    st.divider()
+    secao_dimensionamento()
+
+
+
+# ---------------------------------------------------------------------------
+# Dimensionamento de leitos
+# ---------------------------------------------------------------------------
+
+def secao_dimensionamento() -> None:
+    """
+    Quantos leitos a capital precisa por mes, e quando acionar capacidade extra.
+
+    Traduz o consumo observado em decisao operacional: qual o piso que a rede
+    precisa manter aberto o ano inteiro, e quanto acima disso cada mes exige.
+    """
+    st.subheader("Dimensionamento de leitos por mês")
+    st.caption("Quantos leitos a rede precisa ter aberto em cada mês, e quando "
+               "acionar capacidade adicional.")
+
+    esquerda, direita = st.columns([2, 1])
+    with esquerda:
+        codigo = st.selectbox(
+            "Capital", list(dados.CAPITAIS),
+            format_func=lambda c: dados.CAPITAIS[c],
+            key="capital_dimensionamento")
+    with direita:
+        alvo = st.selectbox(
+            "Taxa de ocupação alvo", [0.80, 0.85, 0.90], index=1,
+            format_func=lambda t: f"{t:.0%}",
+            help="Acima de 85% a fila de espera cresce de forma não linear. "
+                 "Dimensionar para 100% não deixaria folga para a variação "
+                 "do dia a dia.")
+
+    plano = dados.necessidade_leitos(codigo, alvo)
+    if plano.empty:
+        st.info("Sem dados para a capital selecionada.")
+        return
+
+    disponiveis = int(plano["leitos_sus"].iloc[0])
+    base = int(plano["leitos_necessarios"].min())
+    pico = int(plano["leitos_necessarios"].max())
+    mes_pico = int(plano.loc[plano["leitos_necessarios"].idxmax(), "mes"])
+    folga = disponiveis - pico
+
+    colunas = st.columns(4)
+    colunas[0].metric("Leitos SUS cadastrados", tema.formata_milhar(disponiveis))
+    colunas[1].metric("Demanda comum", tema.formata_milhar(base),
+                      help="Piso que a rede precisa manter aberto o ano inteiro.")
+    colunas[2].metric(f"Pico — {NOMES_MES[mes_pico - 1]}",
+                      tema.formata_milhar(pico),
+                      delta=f"+{tema.formata_milhar(pico - base)} leitos",
+                      delta_color="inverse")
+    colunas[3].metric("Folga no pico", tema.formata_milhar(folga),
+                      delta=f"{folga / disponiveis:.0%} da capacidade",
+                      delta_color="off")
+
+    figura = go.Figure()
+    figura.add_trace(go.Scatter(
+        x=[NOMES_MES[int(m) - 1] for m in plano["mes"]],
+        y=plano["leitos_necessarios"],
+        name="Leitos necessários", mode="lines+markers",
+        line={"width": 2, "color": tema.SERIES[0]}, marker={"size": 8},
+        hovertemplate="%{x}<br>%{y:,.0f} leitos necessários<extra></extra>"))
+    figura.add_hline(
+        y=disponiveis, line={"width": 2, "dash": "dash", "color": tema.SERIES[2]},
+        annotation_text=f"Leitos SUS cadastrados: {tema.formata_milhar(disponiveis)}",
+        annotation_position="top left")
+    figura.add_hline(
+        y=base, line={"width": 1, "dash": "dot", "color": tema.TEXTO_SECUNDARIO},
+        annotation_text=f"Demanda comum: {tema.formata_milhar(base)}",
+        annotation_position="bottom left")
+    layout = tema.layout_base(altura=380)
+    layout["margin"]["t"] = 30
+    figura.update_layout(**layout)
+    st.plotly_chart(figura, width="stretch")
+
+    if folga < 0:
+        st.error(
+            f"**A capacidade cadastrada não cobre o pico.** Em "
+            f"{NOMES_MES[mes_pico - 1]} seriam necessários "
+            f"{tema.formata_milhar(pico)} leitos para operar a {alvo:.0%}, "
+            f"contra {tema.formata_milhar(disponiveis)} cadastrados.", icon="🔴")
+    elif folga / disponiveis < 0.10:
+        st.warning(
+            f"**Folga estreita no pico:** {tema.formata_milhar(folga)} leitos, "
+            f"{folga / disponiveis:.0%} da capacidade. Uma epidemia ou um "
+            f"desastre local consumiria essa margem rapidamente.", icon="🟡")
+    else:
+        st.success(
+            f"**Folga de {tema.formata_milhar(folga)} leitos no pico**, "
+            f"{folga / disponiveis:.0%} da capacidade cadastrada.", icon="🟢")
+
+    exibicao = plano[["competencia", "internacoes", "permanencia_media",
+                      "leitos_ocupados", "leitos_necessarios", "leitos_extras",
+                      "leitos_sus", "saldo"]].copy()
+    exibicao["competencia"] = [NOMES_MES[int(m) - 1] for m in plano["mes"]]
+    st.dataframe(
+        exibicao.rename(columns={
+            "competencia": "Mês", "internacoes": "Internações",
+            "permanencia_media": "Permanência", "leitos_ocupados": "Leitos ocupados",
+            "leitos_necessarios": f"Necessários a {alvo:.0%}",
+            "leitos_extras": "Extras sobre a base",
+            "leitos_sus": "Cadastrados", "saldo": "Saldo"}),
+        hide_index=True, width="stretch")
+
+    st.info(
+        "**Como o cálculo funciona.** Os leitos ocupados em média são os dias "
+        "de permanência consumidos divididos pelos dias do mês. Dividir esse "
+        "número pela taxa de ocupação alvo transforma consumo observado em "
+        "dimensionamento — operar a 100% não deixaria folga para a variação "
+        "diária.\n\n"
+        "A **demanda comum** é o mês de menor necessidade: o piso que a rede "
+        "precisa manter aberto o ano inteiro. O que passa disso é capacidade "
+        "sazonal, que pode ser acionada e desativada.", icon="📐")
+
 
 # ---------------------------------------------------------------------------
 # NL -> SQL

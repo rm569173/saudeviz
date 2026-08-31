@@ -363,6 +363,70 @@ def municipios_criticos(ufs: tuple[str, ...] | None = None,
     """)
 
 
+# Capitais do Sudeste, pelo codigo IBGE de 6 digitos usado pelo SIH.
+CAPITAIS = {
+    "320530": "Vitória",
+    "310620": "Belo Horizonte",
+    "330455": "Rio de Janeiro",
+    "355030": "São Paulo",
+}
+
+# Taxa de ocupacao alvo do planejamento. Acima de 85% a fila de espera cresce
+# de forma nao linear: e o limite classico de operacao segura em leito
+# hospitalar. Dimensionar para 100% significaria nao ter folga para variacao
+# diaria nenhuma.
+OCUPACAO_ALVO_PADRAO = 0.85
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def necessidade_leitos(cod_municipio: str,
+                       ocupacao_alvo: float = OCUPACAO_ALVO_PADRAO
+                       ) -> pd.DataFrame:
+    """
+    Quantos leitos o municipio precisaria ter, mes a mes.
+
+    O calculo parte dos leitos-dia efetivamente consumidos:
+
+        leitos ocupados em media = dias de permanencia / dias do mes
+        leitos necessarios       = leitos ocupados / taxa de ocupacao alvo
+
+    A divisao pela taxa alvo e o que transforma consumo observado em
+    dimensionamento: operar a 100% nao deixa folga para a variacao do dia a
+    dia, e a fila cresce de forma nao linear acima de 85%.
+    """
+    dados_mes = consulta(f"""
+        SELECT municipio,
+               uf,
+               mes,
+               competencia,
+               internacoes,
+               dias_permanencia,
+               dias_no_mes,
+               leitos_sus,
+               permanencia_media
+          FROM T_SAUDE_IND_CAPACIDADE_MUNICIPAL
+         WHERE cod_municipio_6 = '{cod_municipio}'
+         ORDER BY mes
+    """)
+    if dados_mes.empty:
+        return dados_mes
+
+    dados_mes["leitos_ocupados"] = (
+        dados_mes["dias_permanencia"] / dados_mes["dias_no_mes"]).round(0)
+    dados_mes["leitos_necessarios"] = (
+        dados_mes["leitos_ocupados"] / ocupacao_alvo).round(0)
+    dados_mes["saldo"] = (
+        dados_mes["leitos_sus"] - dados_mes["leitos_necessarios"])
+    dados_mes["ocupacao_efetiva"] = (
+        dados_mes["leitos_ocupados"] / dados_mes["leitos_sus"]).round(3)
+
+    # Linha de base: o mes de menor necessidade e o piso que a rede precisa
+    # manter aberto o ano inteiro. O que passa disso e capacidade sazonal.
+    base = dados_mes["leitos_necessarios"].min()
+    dados_mes["leitos_extras"] = (dados_mes["leitos_necessarios"] - base).astype(int)
+    return dados_mes
+
+
 @st.cache_data(ttl=3600, show_spinner=False)
 def perfis_pressao(ufs: tuple[str, ...] | None = None) -> pd.DataFrame:
     """

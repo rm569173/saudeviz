@@ -135,22 +135,54 @@ alimentam o tradutor NL→SQL, e mostrá-los conecta o modelo de dados ao Select
 Serve à **2ª entrega** (MVP) e à **5ª** (evidências). ⭐ São os prints mais
 importantes do PPT.
 
-| # | Arquivo | Página | Enquadrar |
-|---|---|---|---|
-| 26 | `painel_visao_geral.png` | Visão geral | Cartões + os dois gráficos |
-| 27 | `painel_capacidade.png` | Capacidade | Cartões de status + gráfico de porte |
-| 28 | `painel_criticos.png` | Capacidade, rolado | Tabela de municípios críticos |
-| 29 | `painel_perfis.png` | Perfis | ⭐ Gráfico de pressão relativa |
-| 30 | `painel_previsao.png` | Previsão | Série com intervalo de confiança |
-| 31 | `painel_modelos.png` | Previsão, rolado | Comparativo + efeito do dia da semana |
-| 32 | `painel_nlsql_pergunta.png` | Pergunte | ⭐ Pergunta + intenção reconhecida |
-| 33 | `painel_nlsql_sql.png` | Pergunte, rolado | ⭐ **O SQL gerado** |
-| 34 | `painel_nlsql_resultado.png` | Pergunte, rolado | Resultado da consulta |
-| 35 | `painel_metodologia.png` | Metodologia | Limitações declaradas |
-| 36 | `painel_sidebar_oracle.png` | qualquer | Barra lateral mostrando o modo de conexão |
+| # | Arquivo | Página | Enquadrar | Feito |
+|---|---|---|---|---|
+| 26 | `painel_01_visao_geral.png` | Visão geral | Cartões + os dois gráficos | ✅ |
+| 27 | `painel_02_capacidade_status.png` | Capacidade hospitalar | Cartões de status + gráfico de porte | ✅ |
+| 28 | `painel_03_capacidade_criticos.png` | Capacidade, rolado | Tabela de municípios críticos | ✅ |
+| 29 | `painel_04_perfis_pressao.png` | Perfis de atendimento | ⭐ Gráfico de pressão relativa | ✅ |
+| 30 | `painel_05_previsao_serie.png` | Previsão de demanda | Série com intervalo de confiança | |
+| 31 | `painel_06_previsao_modelos.png` | Previsão, rolado | Comparativo de modelos + efeito do dia da semana | |
+| 32 | `painel_07_dimensionamento.png` | Previsão, fim da página | ⭐ Curva de leitos necessários mês a mês + os 4 cartões | |
+| 33 | `painel_08_nlsql_exemplos.png` | Pergunte em português | Caixa de pergunta + exemplos sugeridos | |
+| 34 | `painel_09_nlsql_intencao.png` | Pergunte, após enviar | ⭐ Intenção reconhecida + filtros extraídos | |
+| 35 | `painel_10_nlsql_sql.png` | Pergunte, rolado | ⭐ **O SQL gerado** | |
+| 36 | `painel_11_nlsql_resultado.png` | Pergunte, rolado | Resultado da consulta | |
+| 37 | `painel_12_sidebar_oracle.png` | qualquer | Barra lateral mostrando o modo de conexão | |
+
+**No print 32** (`painel_07_dimensionamento`), selecione **Belo Horizonte**: é a capital com a menor folga no
+pico (408 leitos, 6% da capacidade) e a única em que o painel dispara o alerta
+amarelo. Serve melhor à narrativa do que uma capital folgada.
 
 **Dica:** capture com a barra lateral visível. Ela mostra o nome do projeto, seu
 RM e o modo de conexão — contexto de graça em cada print.
+
+---
+
+## Tela 7 — Databricks: clima e internação
+
+Serve ao critério de **inovação** e reforça a **4ª entrega**. É a única parte
+do projeto que usa uma fonte além das três exigidas.
+
+| # | Arquivo | Seção do `06_clima` | O que mostra |
+|---|---|---|---|
+| 39 | `clima_01_fonte.png` | 1 | As 4 capitais, temperaturas e chuva do ano |
+| 40 | `clima_02_chuva_acidentes.png` | 4 | Acidentes em dias com e sem chuva |
+| 41 | `clima_03_gradiente_chuva.png` | 5 | ⭐ Efeito por intensidade da chuva |
+| 42 | `clima_04_frio_respiratoria.png` | 6 | Respiratórias por faixa de temperatura |
+| 43 | `clima_05_correlacao.png` | 7 | Correlação temperatura × internação |
+| 44 | `clima_06_onda_frio.png` | 8 | Efeito de dois dias seguidos de frio |
+| 45 | `clima_07_estacao_perfil.png` | 9 | Índice sazonal por perfil de atendimento |
+| 46 | `clima_08_resumo_hipoteses.png` | 10 | ⭐ Variação percentual de cada hipótese |
+
+⚠️ **Capture mesmo que a hipótese seja refutada.** Um resultado nulo bem medido
+vale mais que um achado forçado — e mostra que você testou de verdade em vez de
+partir da conclusão. O slide muda de *"a chuva aumenta acidentes em X%"* para
+*"testamos e a chuva não explica os acidentes; o planejamento não deve contar
+com isso"*.
+
+O print 41 é o mais importante: se existe efeito real, ele cresce com a
+intensidade da chuva. Diferença sem gradiente é provavelmente ruído.
 
 ---
 
@@ -167,7 +199,7 @@ Serve à **6ª entrega**.
 
 ## Conferência final
 
-- [ ] 42 arquivos em `apresentação/` (4 da Tela 0 + 38 das demais)
+- [ ] 55 arquivos em `apresentação/`
 - [ ] Nenhum par de arquivos com o mesmo tamanho em bytes
 - [ ] Nenhum print com senha, token ou dado pessoal visível
 - [ ] Nenhum print com notificação do Windows aparecendo
