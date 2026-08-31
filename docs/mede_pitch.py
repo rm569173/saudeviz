@@ -89,7 +89,7 @@ def gera_teleprompter():
         elif l.startswith(">") and bloco_atual and len(l.strip()) == 1:
             saida.append("")
 
-    destino = pathlib.Path("docs/teleprompter.txt")
+    destino = pathlib.Path("docs/teleprompter_video.txt")
     destino.write_text("\n".join(saida) + "\n", encoding="utf-8")
     print(f"\nteleprompter gravado: {destino} "
           f"({len(saida)} linhas)")

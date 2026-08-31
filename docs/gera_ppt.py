@@ -13,6 +13,7 @@ Saida: EC_Sprint_2_1TSCO_EvidenciasConstrucao_SaudeViz_Lucas_Colen.pptx
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -49,6 +50,11 @@ MONO = "Consolas"
 
 # Separador de paragrafo dentro das notas do apresentador: linha em branco.
 SEPARADOR = chr(10) * 2
+
+# Titulo de cada slide, preenchido durante a montagem e gravado em
+# docs/slides.json. O teleprompter le esse manifesto em vez do .pptx: o
+# arquivo fica travado enquanto estiver aberto no PowerPoint.
+TITULOS: dict[int, str] = {}
 
 # Slide 16:9 no mesmo tamanho do deck da Sprint 1.
 LARG, ALT = Inches(10), Inches(5.625)
@@ -150,6 +156,10 @@ def rodape(slide, numero):
     anota(slide, numero)
 
 
+def registra(numero, titulo_slide):
+    TITULOS[numero] = titulo_slide
+
+
 def imagem(slide, nome, x, y, w, h, moldura=True):
     """
     Encaixa a imagem na área preservando a proporção.
@@ -238,6 +248,7 @@ CORPO_H = Inches(3.6)
 
 
 def slide_divisor(prs, n, numero, tit, sub):
+    registra(n, f"{numero} — {tit}")
     s = novo_slide(prs, alt=True)
     faixa = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(2.05),
                                Inches(0.16), Inches(1.5))
@@ -255,6 +266,7 @@ def slide_divisor(prs, n, numero, tit, sub):
 
 
 def slide_img(prs, n, tit, sub, imgs, nota=None):
+    registra(n, tit)
     s = novo_slide(prs)
     titulo(s, tit, sub)
     h = CORPO_H - (Inches(0.55) if nota else 0)
@@ -290,6 +302,7 @@ def slide_img_bloco(prs, n, tit, sub, img, bloco, nota=None, larg_img=None,
     dentro delas fica ilegível. O cartão de dados tem a altura do próprio
     conteúdo e fica centrado — esticá-lo até o rodapé deixava metade vazia.
     """
+    registra(n, tit)
     s = novo_slide(prs)
     titulo(s, tit, sub)
     gap = Inches(0.22)
@@ -321,6 +334,7 @@ def slide_img_bloco(prs, n, tit, sub, img, bloco, nota=None, larg_img=None,
 
 
 def slide_bloco(prs, n, tit, sub, bloco, nota=None, tam=10.5, larg=0.8):
+    registra(n, tit)
     s = novo_slide(prs)
     titulo(s, tit, sub)
     w = Emu(int(int(UTIL) * larg))
@@ -336,6 +350,7 @@ def slide_bloco(prs, n, tit, sub, bloco, nota=None, tam=10.5, larg=0.8):
 
 def slide_tabela(prs, n, tit, sub, cab, linhas, larguras=None, tam=9,
                  nota=None):
+    registra(n, tit)
     s = novo_slide(prs)
     titulo(s, tit, sub)
     tabela(s, MARGEM, CORPO_Y, UTIL, cab, linhas, larguras, tam)
@@ -350,7 +365,7 @@ def slide_tabela(prs, n, tit, sub, cab, linhas, larguras=None, tam=9,
 # Montagem
 # ---------------------------------------------------------------------------
 
-def capa(prs):
+def capa(prs, n):
     s = novo_slide(prs, alt=True)
     barra = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.2), ALT)
     barra.fill.solid()
@@ -371,12 +386,15 @@ def capa(prs):
         "Turma 1TSCOA",
         "Lucas Ventura Araujo Ribas Colen — RM 569173",
     ], tamanho=11.5, cor=CORPO, espaco=4)
-    # A capa nao tem rodape, entao a nota e gravada aqui.
-    anota(s, 1)
+    # A capa nao leva rodape, mas consome numero como qualquer slide:
+    # sem isso as notas ficam deslocadas em um.
+    registra(n, "SaúdeViz — capa")
+    anota(s, n)
     return s
 
 
 def identificacao(prs, n):
+    registra(n, "Identificação do grupo")
     s = novo_slide(prs)
     titulo(s, "Identificação do grupo")
     campos = [
@@ -398,6 +416,7 @@ def identificacao(prs, n):
 
 
 def numeros(prs, n):
+    registra(n, "Os números da entrega")
     s = novo_slide(prs)
     titulo(s, "Os números da entrega", "Camada Ouro carregada no Oracle 19c "
                                        "da FIAP")
@@ -428,6 +447,7 @@ def numeros(prs, n):
 
 
 def encerramento(prs, n):
+    registra(n, "Encerramento")
     s = novo_slide(prs, alt=True)
     barra = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, Inches(0.2), ALT)
     barra.fill.solid()
@@ -460,7 +480,7 @@ def main() -> None:
         n += 1
         return n
 
-    capa(prs)
+    capa(prs, prox())
     identificacao(prs, prox())
     numeros(prs, prox())
 
@@ -537,7 +557,9 @@ def main() -> None:
     s = novo_slide(prs)
     imagem(s, "arquitetura_solucao.png", Inches(0.15), Inches(0.15),
            LARG - Inches(0.3), ALT - Inches(0.3), moldura=False)
-    rodape(s, prox())
+    n_arq = prox()
+    registra(n_arq, "Desenho da arquitetura")
+    rodape(s, n_arq)
     slide_tabela(
         prs, prox(), "O que roda onde, e por quê", None,
         ["Etapa", "Onde", "Motivo"],
@@ -865,9 +887,23 @@ def main() -> None:
         tam=10, larg=0.9)
     encerramento(prs, prox())
 
-    prs.save(SAIDA)
+    # O manifesto sai antes do deck: se o .pptx estiver aberto no PowerPoint
+    # a gravacao dele falha, e nao ha razao para perder o manifesto junto.
+    manifesto = Path(__file__).resolve().parent / "slides.json"
+    manifesto.write_text(
+        json.dumps({str(k): v for k, v in sorted(TITULOS.items())},
+                   ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"manifesto: {manifesto.name} ({len(TITULOS)} títulos)")
+
+    try:
+        prs.save(SAIDA)
+    except PermissionError:
+        raise SystemExit(
+            f"{SAIDA.name} esta aberto em outro programa e nao pode ser "
+            f"gravado. Feche o PowerPoint e rode de novo.")
+
     print(f"gravado: {SAIDA.name}")
-    print(f"{n + 1} slides · {SAIDA.stat().st_size / 1024 / 1024:.1f} MB")
+    print(f"{n} slides · {SAIDA.stat().st_size / 1024 / 1024:.1f} MB")
 
 
 if __name__ == "__main__":

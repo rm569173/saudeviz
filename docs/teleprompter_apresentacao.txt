@@ -1,0 +1,703 @@
+SAUDEVIZ - TELEPROMPTER DA APRESENTACAO
+Lucas Ventura Araujo Ribas Colen - RM 569173 - 1TSCOA
+
+49 slides. [colchetes] = instrucao, nao leia em voz alta.
+Para o video de 5 minutos, use teleprompter_video.txt.
+
+==========================================================================
+SLIDE  1/49   ·   20s   ·   acumulado 0:19
+SAÚDEVIZ — CAPA
+==========================================================================
+
+Bom dia. SaudeViz: um painel que transforma microdados publicos de saude
+em resposta que um gestor consegue usar.
+
+Vou mostrar de onde os dados vieram, o que precisou ser feito com eles, e
+como viraram informacao. O produto final esta no ar e eu demonstro ao vivo
+no fim.
+
+==========================================================================
+SLIDE  2/49   ·   3s   ·   acumulado 0:22
+IDENTIFICAÇÃO DO GRUPO
+==========================================================================
+
+Trabalho individual. Lucas Colen, RM 569173, turma 1TSCOA.
+
+==========================================================================
+SLIDE  3/49   ·   42s   ·   acumulado 1:05
+OS NÚMEROS DA ENTREGA
+==========================================================================
+
+Esses numeros sao o resultado da camada Ouro ja carregada no Oracle.
+
+Cinco milhoes e meio de internacoes e o numero DEPOIS do tratamento. O
+bruto que baixei do DATASUS foi sete milhoes. A diferenca de um milhao e
+meio nao e perda: sao internacoes de 2023 e de 2025 que vieram junto,
+porque o SIH publica por mes de pagamento, nao por mes de internacao.
+Volto nesse ponto, porque foi ele que reorientou o projeto.
+
+A consulta que gera esta tela e um SELECT com SUM de internacoes, SUM de
+dias_permanencia e SUM de valor_total sobre a tabela fato, agrupando nada:
+e o total geral.
+
+==========================================================================
+SLIDE  4/49   ·   6s   ·   acumulado 1:10
+1ª ENTREGA — SPRINT 1 ATUALIZADA
+==========================================================================
+
+Primeira entrega: o que prometi na Sprint 1 e o que de fato saiu.
+
+==========================================================================
+SLIDE  5/49   ·   25s   ·   acumulado 1:36
+O QUE MUDOU DESDE A SPRINT 1
+==========================================================================
+
+Quatro itens entregues como prometido, dois entregues de forma diferente,
+dois substituidos.
+
+Os dois amarelos sao limitacao do ambiente, nao minha: o Select AI exige
+Autonomous Database e a conta academica nao tem privilegio de criar
+diretorio. Nos dois casos eu entreguei o script pronto e um substituto
+funcional.
+
+Os dois cinzas sao decisao minha, e eu defendo cada uma na hora certa.
+
+==========================================================================
+SLIDE  6/49   ·   20s   ·   acumulado 1:55
+QUADRO DE GESTÃO
+==========================================================================
+
+Quadro publico no Trello, 44 cartoes.
+
+A quinta lista e a que interessa numa apresentacao academica: "nao
+implementado, com justificativa". Um quadro todo verde esconde as decisoes
+de escopo, que sao parte do trabalho. Cada cartao dessa lista tem o motivo
+tecnico e o que foi entregue no lugar.
+
+==========================================================================
+SLIDE  7/49   ·   2s   ·   acumulado 1:57
+2ª ENTREGA — MVP IMPLEMENTADO
+==========================================================================
+
+Segunda entrega: o MVP funcionando.
+
+==========================================================================
+SLIDE  8/49   ·   27s   ·   acumulado 2:24
+O PAINEL
+==========================================================================
+
+Este e o painel, publicado e conectado ao Oracle da FIAP.
+
+Cada numero desta tela vem de uma consulta com agregacao empurrada para o
+banco. Eu nao carrego a tabela e somo no Python: mando SUM e COUNT para o
+Oracle e trago so o resultado. Isso importa porque a tabela fato tem
+centenas de milhares de linhas, e trazer tudo para o cliente travava a
+tela.
+
+==========================================================================
+SLIDE  9/49   ·   47s   ·   acumulado 3:11
+ONDE A CAPACIDADE FOI ULTRAPASSADA
+==========================================================================
+
+A pergunta e "onde a capacidade foi ultrapassada".
+
+Para responder eu precisei cruzar duas fontes que nao se conhecem: as
+internacoes do SIH e os leitos do CNES. O join e por codigo IBGE de seis
+digitos do municipio. Somo os leitos SUS de todos os estabelecimentos de
+cada municipio, somo os dias de permanencia consumidos naquele mes, divido
+um pelo outro e pelo numero de dias do mes. Isso da a taxa de ocupacao.
+
+Repare nos dois numeros lado a lado: media simples e ponderada. A simples
+trata um municipio de tres leitos igual a Sao Paulo. A distancia entre as
+barras e o tamanho do erro que eu teria cometido se usasse a media
+ingenua.
+
+==========================================================================
+SLIDE 10/49   ·   29s   ·   acumulado 3:40
+MUNICÍPIOS SOB PRESSÃO
+==========================================================================
+
+A lista de municipios criticos sai de um filtro sobre a tabela de
+indicador: situacao igual a 'Critica', ordenado por taxa de ocupacao
+decrescente.
+
+E eu declaro na tela que ocupacao acima de um e alerta para investigar,
+nao prova de colapso. Pode ser leito desatualizado no CNES, ou municipio-
+polo atendendo a regiao inteira. A ferramenta reduz mil seiscentos e
+sessenta e oito municipios a uma lista de dezenas. A decisao continua
+humana.
+
+==========================================================================
+SLIDE 11/49   ·   39s   ·   acumulado 4:19
+QUAIS PERFIS PRESSIONAM MAIS O SISTEMA
+==========================================================================
+
+Esta tela responde "quais perfis pressionam mais".
+
+O perfil de atendimento nao existe no dado bruto: eu derivei do CID
+principal, pegando os tres primeiros caracteres e classificando por faixa.
+J00 a J99 vira respiratorio, S00 a T98 vira causa externa, F00 a F99 vira
+saude mental.
+
+E o ranking nao e por volume. Eu ordeno por pressao relativa: a
+participacao no total de leitos-dia dividida pela participacao no total de
+internacoes. Saude mental fica no topo com 2,15 — ocupa o dobro de leito
+por internacao que a media. Num painel ordenado por volume ela nem
+apareceria.
+
+==========================================================================
+SLIDE 12/49   ·   4s   ·   acumulado 4:23
+3ª ENTREGA — ARQUITETURA FINAL
+==========================================================================
+
+Terceira entrega: a arquitetura que de fato foi implementada.
+
+==========================================================================
+SLIDE 13/49   ·   24s   ·   acumulado 4:47
+DESENHO DA ARQUITETURA
+==========================================================================
+
+O caminho completo do dado.
+
+Quatro fontes publicas. A ingestao baixa e converte, o Databricks processa
+em tres camadas, o Oracle guarda a camada de consumo, o Streamlit
+consulta.
+
+A conversao do .dbc roda fora do Databricks de proposito: e formato
+proprietario do DATASUS que exige extensao compilada em C e acesso FTP, os
+dois pouco praticos em compute serverless.
+
+==========================================================================
+SLIDE 14/49   ·   33s   ·   acumulado 5:20
+O QUE RODA ONDE, E POR QUÊ
+==========================================================================
+
+Cada etapa esta onde esta por um motivo, e vale explicar a escolha.
+
+O download local e por causa da biblioteca compilada. O processamento no
+Databricks e porque sao sete milhoes de linhas — em pandas na minha
+maquina isso daria quatorze giga de memoria e eu tenho cinco livres. Medi
+antes de migrar.
+
+O Oracle e a camada de servico: e dele que o painel consulta, e e nele que
+estao os COMMENT ON que alimentam o tradutor de linguagem natural.
+
+==========================================================================
+SLIDE 15/49   ·   20s   ·   acumulado 5:39
+MEDALLION MATERIALIZADA
+==========================================================================
+
+Isto nao e diagrama, e o catalogo real do Databricks.
+
+As tres camadas existem como schemas separados. Bronze guarda o dado cru
+sem transformar nada — se eu errar na Prata, reprocesso sem baixar
+sessenta arquivos do DATASUS de novo. Essa e a razao de existir da camada
+Bronze.
+
+==========================================================================
+SLIDE 16/49   ·   16s   ·   acumulado 5:55
+A CAMADA GOLD NO ORACLE
+==========================================================================
+
+A camada Ouro no Oracle: onze tabelas T_SAUDE.
+
+Fatos, dimensoes e tabelas de indicador ja agregadas. O painel nao calcula
+nada em tempo de tela: ele consulta indicador pronto. Isso e o que faz a
+tela responder em segundos.
+
+==========================================================================
+SLIDE 17/49   ·   32s   ·   acumulado 6:27
+INTEGRIDADE DO MODELO
+==========================================================================
+
+Esta e a prova de que o modelo esta integro.
+
+Eu tenho tres tabelas construidas por caminhos diferentes: o fato agregado
+por municipio e mes, o indicador de capacidade que faz join com os leitos,
+e o ranking de hospitais agregado por CNES. Sao tres agregacoes
+independentes, partindo de granularidades diferentes.
+
+As tres somam exatamente cinco milhoes quinhentos e quarenta e seis mil
+oitocentos e dezessete. Se eu tivesse duplicado linha num join ou perdido
+registro num filtro, esses numeros divergiriam.
+
+==========================================================================
+SLIDE 18/49   ·   20s   ·   acumulado 6:47
+O QUE NÃO FOI IMPLEMENTADO, E POR QUÊ
+==========================================================================
+
+O que nao foi implementado, e por que.
+
+Nos dois primeiros eu verifiquei no banco antes de desistir — nao presumi.
+No Select AI, consultei o all_objects. Na External Table, consultei o
+all_directories. Os dois retornaram vazio, e eu entreguei o DDL
+documentado junto com a consulta que comprova.
+
+==========================================================================
+SLIDE 19/49   ·   4s   ·   acumulado 6:51
+4ª ENTREGA — MODELOS E TÉCNICAS
+==========================================================================
+
+Quarta entrega: como os dados foram obtidos, tratados e transformados.
+
+==========================================================================
+SLIDE 20/49   ·   39s   ·   acumulado 7:30
+AS FONTES E SEUS FORMATOS
+==========================================================================
+
+As fontes, e como cada uma e lida.
+
+O SIH vem por FTP, em arquivo .dbc, um por estado e por mes: sessenta
+arquivos. O CNES vem por API REST em JSON — e aqui teve armadilha: o
+parametro de UF da API e silenciosamente ignorado. Eu recebia trinta e
+dois mil registros com apenas mil e duzentos unicos, repetidos vinte e
+sete vezes. Descobri contando distintos, e troquei para busca dirigida por
+codigo de estabelecimento.
+
+O IBGE vem em CSV, e cumpre a exigencia do terceiro formato. A quarta
+fonte, de clima, eu acrescentei por conta.
+
+==========================================================================
+SLIDE 21/49   ·   30s   ·   acumulado 8:00
+TRATAMENTO DO FORMATO PROPRIETÁRIO
+==========================================================================
+
+O .dbc do DATASUS e um DBF comprimido com um algoritmo antigo, o PKWare
+DCL. Nenhuma biblioteca padrao le.
+
+E teve um detalhe que custou tempo: a extensao C nao aceita acento no
+caminho do arquivo. O projeto mora numa pasta chamada "Educacao/Ciencia de
+Dados", com cedilha e acento. A solucao foi copiar cada arquivo para um
+diretorio temporario de nome ASCII, converter la, e devolver.
+
+E o tipo de problema que nao aparece em tutorial.
+
+==========================================================================
+SLIDE 22/49   ·   61s   ·   acumulado 9:01
+A DESCOBERTA QUE REORIENTOU O PROJETO
+==========================================================================
+
+Esta e a descoberta que reorientou o projeto inteiro.
+
+Eu criei uma coluna calculada chamada defasagem_faturamento: a diferenca
+em meses entre a competencia do arquivo e o mes real da internacao.
+Agrupei por ela e contei.
+
+Sessenta por cento no mesmo mes. Quarenta por cento espalhados nos tres
+meses seguintes. Ou seja: a competencia do SIH e o mes de PAGAMENTO da
+AIH, nao o da internacao.
+
+Se eu tivesse usado a competencia como eixo de tempo, meu painel
+responderia uma pergunta financeira prometendo uma assistencial. Troquei a
+dimensao temporal para a data de internacao e ampliei a ingestao ate marco
+de 2025, para recuperar dezembro faturado com atraso.
+
+Aqui tambem entram os filtros de qualidade: deduplicacao por numero de AIH
+mantendo a versao mais recente, via row_number sobre uma janela
+particionada por n_aih; descarte de permanencia fora de zero a trezentos e
+sessenta e cinco dias; e descarte de valor negativo.
+
+==========================================================================
+SLIDE 23/49   ·   38s   ·   acumulado 9:39
+ANÁLISE EXPLORATÓRIA
+==========================================================================
+
+Dezesseis consultas SQL documentadas, cobrindo as quatro frentes do
+desafio.
+
+Cada uma tem a pergunta de negocio escrita antes do SQL, e a leitura do
+resultado escrita depois. Nao e SQL solto: e pergunta, consulta, resposta.
+
+Uma delas eu precisei reescrever depois de revisar: a Q11 calculava media
+simples de leitos por cem mil habitantes entre municipios, o que da o
+mesmo peso a uma cidade de cinco mil e a uma de doze milhoes. Reescrevi
+com CTE por municipio, e a conclusao mudou: o Rio passou a ser o pior
+estado, nao Sao Paulo.
+
+==========================================================================
+SLIDE 24/49   ·   36s   ·   acumulado 10:15
+TÉCNICAS ESTATÍSTICAS
+==========================================================================
+
+Duas tecnicas estatisticas, e as duas com proposito.
+
+O IQR de Tukey define o limite de outlier em 1,172. Eu tinha escolhido 1,0
+como limiar de alerta por raciocinio de negocio, antes de calcular isso. O
+criterio estatistico, que nao sabe do meu limiar, confirma que ocupacao
+acima de um e anomala nesta distribuicao.
+
+A correlacao de Pearson entre ocupacao e transferencia da menos 0,305.
+Negativa: municipios com baixa ocupacao transferem MAIS. Nao e contradicao
+— e a assinatura de quem nao tem capacidade resolutiva, estabiliza o
+paciente e encaminha.
+
+==========================================================================
+SLIDE 25/49   ·   46s   ·   acumulado 11:01
+MODELO DE PREVISÃO DE DEMANDA
+==========================================================================
+
+Aqui eu testei duas abordagens e deixei o dado escolher.
+
+A primeira: regressao com tendencia linear, sazonalidade em termos de
+Fourier e variavel de feriado. A segunda: perfil semanal simples, que so
+aprende quanto cada dia da semana desvia da media.
+
+Validei com janela expansivel — treino no passado, teste no futuro,
+avancando. Nunca com dado aleatorio, porque em serie temporal isso vaza o
+futuro para o treino.
+
+A regressao perdeu. O erro dela sobe de seis para vinte e sete por cento
+conforme o horizonte cresce, porque a tendencia linear extrapola. O modelo
+simples fica estavel em cinco e meio.
+
+Reconhecer que a serie nao tem tendencia explorável valeu mais do que
+forcar complexidade.
+
+==========================================================================
+SLIDE 26/49   ·   23s   ·   acumulado 11:24
+O QUE MOVE A DEMANDA HOSPITALAR
+==========================================================================
+
+O sinal previsivel esta no calendario.
+
+Sabado cai trinta e oito por cento, domingo quarenta e um, feriado vinte e
+seis. E consistente nos quatro estados, com variacao de tres pontos entre
+eles.
+
+E a leitura importa: isso nao e menos gente doente no fim de semana. E a
+rede eletiva parada. Cirurgia programada nao acontece no domingo.
+
+==========================================================================
+SLIDE 27/49   ·   4s   ·   acumulado 11:28
+5ª ENTREGA — EVIDÊNCIAS VISUAIS
+==========================================================================
+
+Quinta entrega: as evidencias visuais do que foi construido.
+
+==========================================================================
+SLIDE 28/49   ·   15s   ·   acumulado 11:42
+PREVISÃO DE DEMANDA NO PAINEL
+==========================================================================
+
+A previsao no painel, com intervalo de noventa e cinco por cento.
+
+O intervalo vem do desvio dos residuos por dia da semana — nao e uma faixa
+arbitraria: cada dia tem a sua propria incerteza histórica.
+
+==========================================================================
+SLIDE 29/49   ·   42s   ·   acumulado 12:24
+QUANTOS LEITOS, E QUANDO ABRIR
+==========================================================================
+
+Este e o slide onde o painel deixa de descrever e passa a decidir.
+
+O calculo: dias de permanencia consumidos no mes, divididos pelos dias do
+mes, da o numero medio de leitos ocupados. Divido isso pela taxa de
+ocupacao alvo — oitenta e cinco por cento — e tenho quantos leitos
+precisam estar abertos.
+
+O mes de menor necessidade vira a demanda comum: o piso que a rede nao
+pode desmobilizar. O que passa disso e capacidade sazonal.
+
+Belo Horizonte: piso de 5.107, pico em abril de 5.904, e so 408 leitos de
+folga. Seis por cento. O painel dispara o alerta sozinho.
+
+==========================================================================
+SLIDE 30/49   ·   21s   ·   acumulado 12:45
+CONSULTAS NA CAMADA GOLD
+==========================================================================
+
+Consultas de negocio rodando no Oracle, nao em parquet.
+
+Este e o top dez de hospitais por volume, com a taxa de transferencia ao
+lado. A Santa Casa de BH tem cinquenta e quatro mil internacoes e
+transfere zero virgula dois por cento. E o perfil de quem resolve dentro
+de casa.
+
+==========================================================================
+SLIDE 31/49   ·   27s   ·   acumulado 13:12
+ONDE AS INTERNAÇÕES CRESCEM
+==========================================================================
+
+Onde as internacoes crescem: comparacao do segundo semestre contra o
+primeiro, por municipio.
+
+Usei CTE com SUM condicional — soma quando o mes e menor ou igual a seis,
+soma quando e maior — e filtrei municipios com pelo menos quinhentas
+internacoes no primeiro semestre. Sem esse filtro, uma cidade que saiu de
+duas para dez internacoes apareceria com quatrocentos por cento de
+crescimento e lideraria o ranking.
+
+==========================================================================
+SLIDE 32/49   ·   35s   ·   acumulado 13:47
+QUEM EXPORTA PACIENTE
+==========================================================================
+
+Quem exporta paciente.
+
+Embu-Guacu tem mil quatrocentas e sessenta internacoes, mil e oitenta e
+duas transferencias e quinze leitos. Setenta e quatro por cento dos
+pacientes seguem para outro municipio.
+
+Esse numero so existe porque eu incluí a coluna COBRANCA, que nao estava
+na minha selecao inicial de vinte e quatro colunas. E antes de usar,
+validei o mapeamento: os codigos quarenta e um a quarenta e tres somaram
+exatamente o total da coluna MORTE. Confirmei o bloco de obito
+empiricamente, em vez de confiar na documentacao.
+
+==========================================================================
+SLIDE 33/49   ·   5s   ·   acumulado 13:52
+ANÁLISE COMPLEMENTAR — CLIMA E INTERNAÇÃO
+==========================================================================
+
+Esta parte nao era exigida. Entrou para responder o criterio de inovacao.
+
+==========================================================================
+SLIDE 34/49   ·   28s   ·   acumulado 14:19
+UMA QUARTA FONTE DE DADOS
+==========================================================================
+
+Uma quarta fonte publica: clima diario das quatro capitais, via Open-
+Meteo.
+
+Recorte nas capitais porque clima e local: a media do estado misturaria o
+litoral capixaba com a serra mineira e apagaria qualquer sinal.
+
+E as faixas de temperatura sao quartis calculados DENTRO de cada capital.
+Dezoito graus e frio em Vitoria e ameno em Sao Paulo — um limiar absoluto
+compararia climas diferentes como se fossem o mesmo.
+
+==========================================================================
+SLIDE 35/49   ·   32s   ·   acumulado 14:51
+CHUVA NÃO EXPLICA ACIDENTES
+==========================================================================
+
+Primeira hipotese: chuva aumenta internacao por acidente.
+
+Refutada. Menos de um por cento de diferenca.
+
+Mas o que sustenta a conclusao nao e a media: e o teste de gradiente. Se a
+chuva causasse acidentes, o efeito cresceria de chuva fraca para forte.
+Ele sobe e desce sem padrao, e o valor mais baixo vem de dezesseis dias
+apenas.
+
+Resultado nulo bem medido tambem e resultado. A consequencia pratica: o
+planejamento hospitalar nao deve reservar capacidade para dia de chuva.
+
+==========================================================================
+SLIDE 36/49   ·   14s   ·   acumulado 15:05
+FRIO SE ASSOCIA A INTERNAÇÃO RESPIRATÓRIA
+==========================================================================
+
+Segunda hipotese: frio aumenta internacao respiratoria.
+
+Confirmada. Nove por cento, e com gradiente monotonico nas quatro
+capitais, cada uma calculada de forma independente. Quatro replicacoes do
+mesmo padrao e mais forte que um numero agregado.
+
+==========================================================================
+SLIDE 37/49   ·   18s   ·   acumulado 15:24
+SÓ A TEMPERATURA MÍNIMA IMPORTA
+==========================================================================
+
+E um detalhe que reforca: a temperatura MAXIMA nao tem correlacao nenhuma,
+ronda zero nas quatro cidades. Só a minima correlaciona.
+
+E o frio da madrugada que se relaciona com internacao respiratoria, nao o
+calor do dia. Se fosse ruido, as duas variaveis se moveriam juntas.
+
+==========================================================================
+SLIDE 38/49   ·   35s   ·   acumulado 15:58
+A RESSALVA QUE O PRÓPRIO DADO REVELA
+==========================================================================
+
+E aqui eu declaro o limite da propria analise.
+
+A chuva aparece com correlacao negativa: dia chuvoso tem MENOS internacao
+respiratoria. Contraintuitivo, ate lembrar que no Sudeste chove no verao e
+a seca e no inverno. A chuva esta medindo a estacao, nao a si mesma.
+
+O mesmo confundimento pode valer para o frio. Os nove por cento podem ser
+efeito da temperatura, da sazonalidade viral, ou dos dois. E associacao,
+nao causa.
+
+Separar exigiria dado de circulacao viral por semana epidemiologica. Esta
+registrado como proximo passo.
+
+==========================================================================
+SLIDE 39/49   ·   3s   ·   acumulado 16:01
+SELECT AI — PERGUNTAS EM PORTUGUÊS
+==========================================================================
+
+A parte de linguagem natural do desafio.
+
+==========================================================================
+SLIDE 40/49   ·   4s   ·   acumulado 16:05
+PERGUNTAS EM LINGUAGEM NATURAL
+==========================================================================
+
+A pagina "Pergunte em portugues". Oito exemplos, e campo livre.
+
+==========================================================================
+SLIDE 41/49   ·   28s   ·   acumulado 16:33
+O SQL GERADO E EXECUTADO
+==========================================================================
+
+Duas perguntas diferentes gerando SQL sobre tabelas diferentes.
+
+O tradutor pontua a pergunta contra um vocabulario de radicais com peso,
+escolhe a intencao de maior pontuacao, extrai as entidades — estado, mes,
+quantidade — e monta o SQL a partir de um modelo parametrizado.
+
+E ele MOSTRA o SQL antes de executar. Isso e deliberado: num painel de
+saude publica, quem decide precisa poder conferir de onde veio o numero.
+
+==========================================================================
+SLIDE 42/49   ·   33s   ·   acumulado 17:06
+POR QUE NÃO É O SELECT AI NATIVO
+==========================================================================
+
+Por que nao e o Select AI nativo.
+
+Eu consultei o all_objects procurando o DBMS_CLOUD_AI. Retornou zero. O
+Select AI so existe no Autonomous Database, e a instancia academica da
+FIAP e uma 19c Enterprise.
+
+Entao implementei o equivalente sobre exatamente os mesmos metadados: os
+COMMENT ON das tabelas. Eu escrevi esses comentarios em linguagem de
+negocio de proposito, desde o DDL, sabendo que seriam o dicionario do
+tradutor.
+
+Migrar para o Autonomous nao exige remodelar nada. O script ja esta
+entregue.
+
+==========================================================================
+SLIDE 43/49   ·   2s   ·   acumulado 17:08
+6ª · 7ª · 8ª ENTREGA — FECHAMENTO
+==========================================================================
+
+Fechamento: repositorio, video e conclusoes.
+
+==========================================================================
+SLIDE 44/49   ·   18s   ·   acumulado 17:26
+CÓDIGO-FONTE
+==========================================================================
+
+O codigo esta todo publico no GitHub. Notebooks, pipeline de ingestao,
+DDL, tradutor e painel.
+
+E a camada Ouro esta versionada junto — cerca de seis mega de parquet.
+Isso permite que qualquer pessoa reproduza o painel sem ter acesso ao
+Oracle da FIAP.
+
+==========================================================================
+SLIDE 45/49   ·   4s   ·   acumulado 17:30
+VÍDEO PITCH
+==========================================================================
+
+O video de cinco minutos com a demonstracao ao vivo.
+
+==========================================================================
+SLIDE 46/49   ·   22s   ·   acumulado 17:52
+O QUE APRENDEMOS COM OS DADOS
+==========================================================================
+
+Tres coisas que os dados me ensinaram, e que eu nao sabia quando comecei.
+
+A primeira mudou a dimensao temporal do projeto inteiro. A segunda mudou a
+pergunta que o painel responde. A terceira me fez descartar o modelo mais
+sofisticado em favor do mais simples.
+
+Nenhuma das tres estava no plano da Sprint 1.
+
+==========================================================================
+SLIDE 47/49   ·   19s   ·   acumulado 18:11
+LIMITAÇÕES DECLARADAS
+==========================================================================
+
+E o que este painel NAO pode afirmar.
+
+Declarar limite nao enfraquece o trabalho: e o que separa analise de
+opiniao com grafico. Cada um desses itens eu medi antes de declarar —
+inclusive o menos de um por cento dos leitos-dia de pacientes internados
+antes de 2024.
+
+==========================================================================
+SLIDE 48/49   ·   15s   ·   acumulado 18:26
+PRÓXIMOS PASSOS
+==========================================================================
+
+Os proximos passos saem direto das limitacoes do slide anterior.
+
+Nenhum deles exige refazer o que esta feito: o pipeline ja e parametrizado
+por estado, e a migracao para o Autonomous e troca de motor, nao de
+modelo.
+
+==========================================================================
+SLIDE 49/49   ·   4s   ·   acumulado 18:30
+ENCERRAMENTO
+==========================================================================
+
+O painel esta no ar e o codigo esta aberto.
+
+Obrigado.
+
+
+==========================================================================
+INDICE E ORCAMENTO DE TEMPO
+==========================================================================
+
+ 1. SaúdeViz — capa                              20s    0:19
+ 2. Identificação do grupo                        3s    0:22
+ 3. Os números da entrega                        42s    1:05
+ 4. 1ª ENTREGA — Sprint 1 atualizada              6s    1:10
+ 5. O que mudou desde a Sprint 1                 25s    1:36
+ 6. Quadro de gestão                             20s    1:55
+ 7. 2ª ENTREGA — MVP implementado                 2s    1:57
+ 8. O painel                                     27s    2:24
+ 9. Onde a capacidade foi ultrapassada           47s    3:11
+10. Municípios sob pressão                       29s    3:40
+11. Quais perfis pressionam mais o sistema       39s    4:19
+12. 3ª ENTREGA — Arquitetura final                4s    4:23
+13. Desenho da arquitetura                       24s    4:47
+14. O que roda onde, e por quê                   33s    5:20
+15. Medallion materializada                      20s    5:39
+16. A camada Gold no Oracle                      16s    5:55
+17. Integridade do modelo                        32s    6:27
+18. O que não foi implementado, e por quê        20s    6:47
+19. 4ª ENTREGA — Modelos e técnicas               4s    6:51
+20. As fontes e seus formatos                    39s    7:30
+21. Tratamento do formato proprietário           30s    8:00
+22. A descoberta que reorientou o projeto        61s    9:01
+23. Análise exploratória                         38s    9:39
+24. Técnicas estatísticas                        36s   10:15
+25. Modelo de previsão de demanda                46s   11:01
+26. O que move a demanda hospitalar              23s   11:24
+27. 5ª ENTREGA — Evidências visuais               4s   11:28
+28. Previsão de demanda no painel                15s   11:42
+29. Quantos leitos, e quando abrir               42s   12:24
+30. Consultas na camada Gold                     21s   12:45
+31. Onde as internações crescem                  27s   13:12
+32. Quem exporta paciente                        35s   13:47
+33. ANÁLISE COMPLEMENTAR — Clima e internação     5s   13:52
+34. Uma quarta fonte de dados                    28s   14:19
+35. Chuva não explica acidentes                  32s   14:51
+36. Frio se associa a internação respiratória    14s   15:05
+37. Só a temperatura mínima importa              18s   15:24
+38. A ressalva que o próprio dado revela         35s   15:58
+39. SELECT AI — Perguntas em português            3s   16:01
+40. Perguntas em linguagem natural                4s   16:05
+41. O SQL gerado e executado                     28s   16:33
+42. Por que não é o Select AI nativo             33s   17:06
+43. 6ª · 7ª · 8ª ENTREGA — Fechamento             2s   17:08
+44. Código-fonte                                 18s   17:26
+45. Vídeo pitch                                   4s   17:30
+46. O que aprendemos com os dados                22s   17:52
+47. Limitações declaradas                        19s   18:11
+48. Próximos passos                              15s   18:26
+49. Encerramento                                  4s   18:30
+
+TOTAL: 18 min 30s de fala, a 150 palavras por minuto.
+
+Sem contar pausa, troca de slide e pergunta da banca.
+Reserve mais uns 20% para isso.

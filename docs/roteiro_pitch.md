@@ -10,7 +10,7 @@ Lucas Ventura Araujo Ribas Colen — RM 569173
 > 150 por minuto, ritmo de fala clara. Rode `py docs/mede_pitch.py` depois de
 > qualquer edição no texto falado — ele recalcula e avisa se estourou.
 >
-> Versão sem formatação para teleprompter em `docs/teleprompter.txt`.
+> Versão sem formatação para teleprompter em `docs/teleprompter_video.txt`.
 
 **Fala: 4min39s. Sobram 21s** para as pausas de navegação da demo.
 
