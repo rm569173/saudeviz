@@ -10,6 +10,9 @@ Execucao local:
 O painel consulta o Oracle Database da FIAP ao vivo e cai para o retrato em
 parquet se o banco estiver indisponivel. O modo em uso aparece na barra
 lateral - dado de contingencia nunca se passa por dado ao vivo.
+
+Cinco paginas: visao geral, capacidade hospitalar, perfis de atendimento,
+previsao de demanda e o tradutor de linguagem natural para SQL.
 """
 from __future__ import annotations
 
@@ -55,8 +58,7 @@ def barra_lateral() -> tuple[str, tuple[str, ...]]:
          "Capacidade hospitalar",
          "Perfis de atendimento",
          "Previsão de demanda",
-         "Pergunte em português",
-         "Metodologia"],
+         "Pergunte em português"],
         label_visibility="collapsed",
     )
 
@@ -123,7 +125,7 @@ def pagina_visao_geral(ufs: tuple[str, ...]) -> None:
     esquerda, direita = st.columns([3, 2])
 
     with esquerda:
-        st.subheader("Evolução mensal")
+        st.subheader("Internações por mês de internação")
         fato = dados.carrega("fato_internacao_mensal")
         fato = fato[fato["uf"].isin(ufs)]
         mensal = (fato.groupby(["uf", "mes"], as_index=False)["internacoes"]
@@ -149,7 +151,7 @@ def pagina_visao_geral(ufs: tuple[str, ...]) -> None:
                    "de registros de meses anteriores.")
 
     with direita:
-        st.subheader("Comparativo por estado")
+        st.subheader("Total de internações por estado em 2024")
         resumo = (fato.groupby("uf", as_index=False)
                   .agg(internacoes=("internacoes", "sum"),
                        dias=("dias_permanencia", "sum"),
@@ -213,7 +215,7 @@ def pagina_capacidade(ufs: tuple[str, ...]) -> None:
 
     st.divider()
 
-    st.subheader("Ocupação por porte de município")
+    st.subheader("Taxa de ocupação de leitos SUS por porte de município")
     ocupacao = dados.ocupacao_ponderada(ufs)
 
     figura = go.Figure()
@@ -248,7 +250,7 @@ def pagina_capacidade(ufs: tuple[str, ...]) -> None:
         "muito desiguais, a diferença seria grande — por isso o painel mostra "
         "as duas em vez de escolher uma em silêncio.", icon="📐")
 
-    st.subheader("Municípios sob maior pressão")
+    st.subheader("Municípios com maior taxa de ocupação de leitos")
     criticos = (capacidade[capacidade["situacao"].isin(["Critica", "Atencao"])]
                 .nlargest(25, "taxa_ocupacao"))
     if criticos.empty:
@@ -289,7 +291,7 @@ def pagina_perfis(ufs: tuple[str, ...]) -> None:
 
     perfil = dados.perfis_pressao(ufs).head(12)
 
-    st.subheader("Pressão relativa por perfil")
+    st.subheader("Consumo de leito por perfil, frente ao volume de internações")
     ordenado = perfil.sort_values("pressao_relativa")
     cores = [tema.SERIES[7] if v > 1.3 else
              tema.SERIES[3] if v > 1.0 else tema.SERIES[0]
@@ -380,7 +382,7 @@ def pagina_previsao(ufs: tuple[str, ...]) -> None:
     esquerda, direita = st.columns(2)
 
     with esquerda:
-        st.subheader("Qual modelo prevê melhor")
+        st.subheader("Erro de previsão por horizonte, em pontos percentuais")
         try:
             horizonte = dados.carrega("comparativo_horizonte")
             figura = go.Figure()
@@ -408,7 +410,7 @@ def pagina_previsao(ufs: tuple[str, ...]) -> None:
             st.info(f"Comparativo indisponível: {erro}")
 
     with direita:
-        st.subheader("Efeito do dia da semana")
+        st.subheader("Variação de internações por dia da semana")
         try:
             coeficientes = dados.carrega("coeficientes_modelo")
             dias = coeficientes[
@@ -521,94 +523,12 @@ def pagina_pergunte(ufs: tuple[str, ...]) -> None:
         st.error(f"Erro ao executar a consulta: {erro}")
 
 
-# ---------------------------------------------------------------------------
-# Metodologia
-# ---------------------------------------------------------------------------
-
-def pagina_metodologia() -> None:
-    st.title("Metodologia")
-
-    st.subheader("Arquitetura")
-    st.code(
-        "FTP DATASUS  ─┐\n"
-        "API CNES     ─┼─►  Databricks  ─►  Oracle 19c  ─►  Streamlit\n"
-        "CSV IBGE     ─┘    Bronze          camada Gold      painel\n"
-        "                   Prata           T_SAUDE_*        NL→SQL\n"
-        "                   Ouro",
-        language=None)
-
-    st.subheader("As três fontes exigidas pelo desafio")
-    st.dataframe(pd.DataFrame([
-        {"Fonte": "1 — SIH/SUS", "Formato": "Relacional (.dbc → parquet)",
-         "Origem": "FTP público do DATASUS", "Volume": "7.015.106 registros"},
-        {"Fonte": "2 — CNES", "Formato": "JSON semiestruturado",
-         "Origem": "API REST do Ministério da Saúde", "Volume": "4.481 estabelecimentos"},
-        {"Fonte": "3 — IBGE", "Formato": "CSV",
-         "Origem": "API de agregados do IBGE", "Volume": "5.571 municípios"},
-    ]), hide_index=True, width="stretch")
-
-    st.subheader("Decisões metodológicas que mudam os números")
-
-    with st.expander("A competência do SIH não é a data da internação", expanded=True):
-        st.markdown(
-            "`ANO_CMPT`/`MES_CMPT` é o mês em que a AIH foi **paga**, não em "
-            "que o paciente internou. Medido nos próprios dados: apenas "
-            "**60,8%** das internações são faturadas no mês em que ocorrem.\n\n"
-            "| Defasagem | Participação |\n|---|---|\n"
-            "| mesmo mês | 60,8% |\n| 1 mês | 25,8% |\n| 2 meses | 8,5% |\n"
-            "| 3 meses | 4,3% |\n\n"
-            "Por isso a ingestão vai até março/2025 — para recuperar as "
-            "internações de dezembro/2024 faturadas com atraso — e toda a "
-            "análise usa `dt_internacao`.")
-
-    with st.expander("Taxa de ocupação: o que ela mede e o que não mede"):
-        st.markdown(
-            "```\ntaxa = dias de permanência consumidos\n"
-            "       ÷ (leitos SUS × dias reais do mês)\n```\n"
-            "Acima de 1,0 significa que a demanda superou a capacidade "
-            "declarada. **Três leituras possíveis:** sobrecarga real, leito "
-            "desatualizado no CNES, ou município-polo que atende a região.\n\n"
-            "Usamos os dias reais de cada mês (28, 30, 31), e não uma média de "
-            "30,4 — senão fevereiro pareceria mais pressionado do que é.")
-
-    with st.expander("Por que o modelo de previsão é simples"):
-        st.markdown(
-            "Testamos regressão com tendência, sazonalidade em Fourier e "
-            "feriado. Ela **perdeu** para um modelo de perfil semanal em todos "
-            "os horizontes acima de 7 dias, e seu erro subiu de 6% para 27% "
-            "conforme o horizonte crescia.\n\n"
-            "A conclusão é que a série **não tem tendência explorável**: o "
-            "sinal previsível está no ciclo semanal e nos feriados. "
-            "Reconhecer isso vale mais que forçar complexidade sobre um "
-            "fenômeno que não a comporta.")
-
-    st.subheader("Limitações declaradas")
-    st.markdown(
-        "- **Recorte no Sudeste** (ES, MG, RJ, SP — 89 milhões de habitantes). "
-        "O pipeline é parametrizado por UF.\n"
-        "- **Dezembro/2024 tem cobertura de ~99,4%** — internações faturadas a "
-        "partir de abril/2025 não entraram.\n"
-        "- **Select AI não disponível** na instância da FIAP; script de "
-        "configuração entregue para Autonomous Database.\n"
-        "- **External Table não criada** por falta do privilégio "
-        "`CREATE ANY DIRECTORY`; o CSV é carregado como tabela comum.\n"
-        "- **Pacientes internados antes de 2024** que seguem hospitalizados "
-        "não entram na contagem do ano — efeito medido em menos de 1% dos "
-        "leitos-dia.")
-
-    st.subheader("Dicionário de dados")
-    from src.selectai.metadados import contexto_para_prompt
-    st.code(contexto_para_prompt(), language=None)
-
 
 # ---------------------------------------------------------------------------
 
 def main() -> None:
     pagina, ufs = barra_lateral()
 
-    if pagina == "Metodologia":
-        pagina_metodologia()
-        return
     if pagina == "Pergunte em português":
         pagina_pergunte(ufs)
         return
