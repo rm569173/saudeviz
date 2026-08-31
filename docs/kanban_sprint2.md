@@ -1,15 +1,19 @@
 # Quadro Kanban — 1ª entrega da Sprint 2
 
-Conteúdo pronto para montar no Trello (ou equivalente). Cobre a exigência do
-template:
+**Quadro no Trello:** https://trello.com/b/3XTAInGQ
 
-> *"As atividades que não foram concluídas devem constar nesse planejamento no
-> devido status em que se encontra."*
+> ⚠️ **Pendente:** deixar o quadro **público** antes de entregar.
+> Menu do quadro (⋯ no canto superior direito) → *Configurações* →
+> *Visibilidade* → **Público**. Sem isso o avaliador não consegue abrir.
+>
+> ⚠️ **Pendente:** nomear as 6 etiquetas. Abra qualquer cartão → *Etiquetas* →
+> lápis em cada cor:
+> verde `Dados` · azul `Engenharia` · roxo `Análise` ·
+> amarelo `Documentação` · laranja `Apresentação` · vermelho `Não implementado`
 
-**Etiquetas sugeridas:** `Dados` · `Engenharia` · `Análise` · `Documentação` · `Apresentação`
-
-⚠️ Deixar o quadro **público** (Configurações → Visibilidade → Público) e colocar
-o link no PPT. Sem isso o avaliador não consegue abrir.
+O quadro tem **44 cartões em 5 listas**, cada um com a evidência numérica na
+descrição. O conteúdo abaixo é o rascunho que deu origem a ele — mantido como
+registro, mas o Trello é a fonte atual.
 
 ---
 
