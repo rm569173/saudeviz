@@ -1,0 +1,21 @@
+SAUDEVIZ - Painel inteligente de acesso hospitalar e perfil de atendimento
+Challenge FIAP x Oracle 2026 - Sprint 2
+
+LINK DO VIDEO
+_____________________________________________________________
+COLE AQUI A URL DO YOUTUBE
+_____________________________________________________________
+
+Publicar como NAO LISTADO ou PUBLICO. Video privado nao abre
+para o avaliador e vale como nao entregue.
+
+INTEGRANTES (ordem alfabetica)
+Lucas Ventura Araujo Ribas Colen - RM 569173
+
+TURMA
+1TSCOA
+
+DEMAIS LINKS DA ENTREGA
+Painel:  https://saudeviz.streamlit.app
+Codigo:  https://github.com/rm569173/saudeviz
+Kanban:  https://trello.com/b/3XTAInGQ
