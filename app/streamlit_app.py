@@ -241,8 +241,12 @@ def pagina_capacidade(ufs: tuple[str, ...]) -> None:
         "**Por que dois números?** A média simples trata um município de três "
         "leitos igual a São Paulo. A ponderada divide o total de dias "
         "consumidos pelo total de leitos-dia disponíveis — é a taxa real do "
-        "sistema. A distância entre as duas barras mostra o tamanho da "
-        "distorção.", icon="📐")
+        "sistema, e é a que deve ser citada.\n\n"
+        "No Sudeste as duas quase coincidem, e isso também informa: os "
+        "municípios da região são homogêneos o bastante para que a média "
+        "simples não engane. Num recorte nacional, com municípios de portes "
+        "muito desiguais, a diferença seria grande — por isso o painel mostra "
+        "as duas em vez de escolher uma em silêncio.", icon="📐")
 
     st.subheader("Municípios sob maior pressão")
     criticos = (capacidade[capacidade["situacao"].isin(["Critica", "Atencao"])]

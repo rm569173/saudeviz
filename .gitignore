@@ -23,6 +23,16 @@ dados/prata/
 dados/*.duckdb
 dados/*.duckdb.wal
 
+
+# ---------------------------------------------------------------------------
+# Evidencias visuais
+#
+# A pasta apresentacao/ E versionada de proposito. A 6a entrega do challenge
+# pede "todos os codigos fontes gerados" e a empresa parceira avalia o
+# entregavel tecnico: manter os prints ao lado do codigo que os produziu
+# torna a evidencia rastreavel ate a consulta que gerou cada numero.
+# ---------------------------------------------------------------------------
+
 # ---------------------------------------------------------------------------
 # Python
 # ---------------------------------------------------------------------------

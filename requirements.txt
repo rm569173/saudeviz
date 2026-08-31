@@ -9,7 +9,10 @@ plotly==7.0.0
 # Manipulacao de dados
 pandas==2.3.1
 numpy==2.3.2
-pyarrow==25.0.1
+# pyarrow travado abaixo da 25: a 25.0.1 tem um segfault conhecido
+# (apache/arrow#50471) e o proprio Streamlit Cloud a substitui no deploy.
+# Fixar aqui mantem o ambiente local igual ao publicado.
+pyarrow==24.0.0
 
 # Acesso ao Oracle - modo thin, sem Instant Client
 oracledb==4.0.2

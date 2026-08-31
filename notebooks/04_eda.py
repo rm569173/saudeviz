@@ -409,16 +409,42 @@
 # COMMAND ----------
 
 # MAGIC %sql
+# MAGIC WITH por_municipio AS (
+# MAGIC     -- O indicador e mensal: cada municipio aparece em ate 12 linhas.
+# MAGIC     -- Reduzir a uma linha por municipio ANTES de somar e obrigatorio,
+# MAGIC     -- senao o mesmo leito seria contado doze vezes.
+# MAGIC     SELECT cod_municipio_6,
+# MAGIC            uf,
+# MAGIC            MAX(populacao)          AS populacao,
+# MAGIC            MAX(leitos_sus)         AS leitos_sus,
+# MAGIC            MAX(meta_leitos_oms)    AS meta_leitos_oms,
+# MAGIC            MAX(deficit_leitos_oms) AS deficit_leitos_oms
+# MAGIC       FROM workspace.saudeviz_ouro.ind_capacidade_municipal
+# MAGIC      GROUP BY cod_municipio_6, uf
+# MAGIC )
 # MAGIC SELECT uf,
-# MAGIC        COUNT(DISTINCT cod_municipio_6)                          AS municipios,
-# MAGIC        SUM(DISTINCT populacao)                AS populacao,
-# MAGIC        MAX(leitos_sus)                                          AS leitos_sus_max_mes,
-# MAGIC        ROUND(AVG(leitos_por_100mil_hab), 1)                     AS leitos_por_100mil,
-# MAGIC        300                                                      AS meta_oms,
-# MAGIC        SUM(DISTINCT deficit_leitos_oms)                         AS deficit_total
-# MAGIC   FROM workspace.saudeviz_ouro.ind_capacidade_municipal
+# MAGIC        COUNT(*)                                              AS municipios_com_internacao,
+# MAGIC        SUM(populacao)                                        AS populacao_coberta,
+# MAGIC        SUM(leitos_sus)                                       AS leitos_sus,
+# MAGIC        ROUND(100000.0 * SUM(leitos_sus) / SUM(populacao), 1) AS leitos_por_100mil,
+# MAGIC        300                                                   AS meta_oms_por_100mil,
+# MAGIC        SUM(meta_leitos_oms)                                  AS meta_leitos,
+# MAGIC        SUM(deficit_leitos_oms)                               AS deficit_leitos
+# MAGIC   FROM por_municipio
 # MAGIC  GROUP BY uf
-# MAGIC  ORDER BY leitos_por_100mil;
+# MAGIC  ORDER BY leitos_por_100mil ASC;
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC **Leitura para a gestão:** os quatro estados do Sudeste operam abaixo do
+# MAGIC parâmetro da OMS de 300 leitos por 100 mil habitantes. São Paulo, o mais
+# MAGIC rico da federação, é também o mais distante da meta.
+# MAGIC
+# MAGIC ⚠️ **O déficit está subestimado de propósito.** Só entram municípios que
+# MAGIC registraram internação em 2024 — 823 dos 1.668 do Sudeste. Municípios sem
+# MAGIC nenhuma internação registrada não aparecem, e são justamente os que
+# MAGIC dependem inteiramente da rede vizinha.
 
 # COMMAND ----------
 
