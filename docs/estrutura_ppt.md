@@ -217,19 +217,18 @@ parada, não menos doentes.
 🖼️ `painel_05_previsao_serie.png`
 
 ### Slide 23b — Quantos leitos, e quando abrir
-🖼️ `painel_07b_dimensionamento_bh.png` · `painel_07_dimensionamento.png`
+🖼️ `painel_07_dimensionamento.png`
 ```
-                    Cadastrados   Demanda comum   Pico (abr)   Folga no pico
+Belo Horizonte  ·  6.312 leitos cadastrados
 
-Belo Horizonte            6.312           5.107        5.904     408   (6%)
-Vitória                   1.405           1.020        1.207     198  (14%)
+Demanda comum      5.107 leitos abertos o ano inteiro
+Pico (abril)       5.904  →  +797 leitos sazonais
+Folga no pico        408  →  6% da capacidade
 ```
 A curva mensal diz ao gestor **quando** acionar capacidade extra e **qual é o
 piso** que não pode ser desmobilizado. Abril é o pico nas quatro capitais.
 
-A mesma tela dá dois veredictos opostos: Vitória em verde, Belo Horizonte em
-alerta. Seis por cento de folga no pico é a margem que uma epidemia consome
-em dias.
+Seis por cento de folga no pico é a margem que uma epidemia consome em dias.
 
 ### Slide 24 — Consultas na camada Gold
 🖼️ `oracle_top10_hospitais.png`
