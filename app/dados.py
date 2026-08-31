@@ -116,7 +116,19 @@ def modo_conexao() -> tuple[str, str]:
     return ("oracle" if ativo else "parquet"), detalhe
 
 
-@st.cache_data(ttl=600, show_spinner=False)
+def _modo() -> str:
+    """Destino em uso, para escolher o dialeto de SQL."""
+    ativo, _ = _testa_oracle()
+    return "oracle" if ativo else "parquet"
+
+
+# Linhas trazidas por ida e volta ao banco. O padrao do driver e 100, o que
+# para uma tabela de 200 mil linhas significa 2 mil viagens ate o servidor da
+# faculdade - inviavel pela internet publica. Com 10 mil por busca, sao 20.
+LINHAS_POR_BUSCA = 10_000
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
 def consulta_oracle(sql: str) -> pd.DataFrame:
     """Executa SQL no Oracle. Levanta excecao se o banco nao responder."""
     import oracledb
@@ -127,6 +139,8 @@ def consulta_oracle(sql: str) -> pd.DataFrame:
 
     with oracledb.connect(**credenciais) as conexao:
         with conexao.cursor() as cursor:
+            cursor.arraysize = LINHAS_POR_BUSCA
+            cursor.prefetchrows = LINHAS_POR_BUSCA + 1
             cursor.execute(sql.strip().rstrip(";"))
             colunas = [descricao[0].lower() for descricao in cursor.description]
             return pd.DataFrame(cursor.fetchall(), columns=colunas)
@@ -206,80 +220,160 @@ def carrega(nome: str) -> pd.DataFrame:
 # Indicadores agregados usados nos cartoes de abertura
 # ---------------------------------------------------------------------------
 
-@st.cache_data(ttl=600, show_spinner=False)
-def indicadores_gerais(ufs: tuple[str, ...] | None = None) -> dict[str, float]:
-    """Numeros de topo do painel, ja filtrados pelas UFs selecionadas."""
-    fato = carrega("fato_internacao_mensal")
-    if ufs:
-        fato = fato[fato["uf"].isin(ufs)]
+def filtro_uf(ufs: tuple[str, ...] | None, coluna: str = "uf") -> str:
+    """Clausula de filtro por UF, ou vazia quando todas estao selecionadas."""
+    if not ufs:
+        return ""
+    lista = ", ".join(f"'{uf}'" for uf in ufs)
+    return f" AND {coluna} IN ({lista})"
 
-    internacoes = int(fato["internacoes"].sum())
-    if internacoes == 0:
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def indicadores_gerais(ufs: tuple[str, ...] | None = None) -> dict[str, float]:
+    """
+    Numeros de topo do painel.
+
+    A agregacao roda no banco, nao em memoria: trazer 200 mil linhas pela
+    internet para calcular sete somas seria desperdicio de rede e o motivo de
+    o painel demorar a abrir.
+    """
+    resultado = consulta(f"""
+        SELECT SUM(internacoes)      AS internacoes,
+               SUM(dias_permanencia) AS dias_permanencia,
+               SUM(obitos)           AS obitos,
+               SUM(transferencias)   AS transferencias,
+               SUM(valor_total)      AS valor_total
+          FROM T_SAUDE_FATO_INTERNACAO_MENSAL
+         WHERE 1 = 1{filtro_uf(ufs)}
+    """)
+    if resultado.empty or not resultado["internacoes"].iloc[0]:
         return {}
 
+    linha = resultado.iloc[0]
+    internacoes = int(linha["internacoes"])
     return {
         "internacoes": internacoes,
-        "valor_total": float(fato["valor_total"].sum()),
+        "valor_total": float(linha["valor_total"]),
         # Medias sempre a partir das somas: media de medias daria peso igual a
         # grupos de tamanhos diferentes.
-        "permanencia_media": float(fato["dias_permanencia"].sum() / internacoes),
-        "taxa_mortalidade": 100 * float(fato["obitos"].sum() / internacoes),
-        "taxa_transferencia": 100 * float(fato["transferencias"].sum() / internacoes),
-        "custo_medio": float(fato["valor_total"].sum() / internacoes),
-        "leitos_dia": int(fato["dias_permanencia"].sum()),
+        "permanencia_media": float(linha["dias_permanencia"]) / internacoes,
+        "taxa_mortalidade": 100 * float(linha["obitos"]) / internacoes,
+        "taxa_transferencia": 100 * float(linha["transferencias"]) / internacoes,
+        "custo_medio": float(linha["valor_total"]) / internacoes,
+        "leitos_dia": int(linha["dias_permanencia"]),
     }
 
 
-@st.cache_data(ttl=600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
+def internacoes_por_mes(ufs: tuple[str, ...] | None = None) -> pd.DataFrame:
+    """Serie mensal por UF para o grafico de evolucao."""
+    return consulta(f"""
+        SELECT uf, mes, SUM(internacoes) AS internacoes
+          FROM T_SAUDE_FATO_INTERNACAO_MENSAL
+         WHERE 1 = 1{filtro_uf(ufs)}
+         GROUP BY uf, mes
+         ORDER BY uf, mes
+    """)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def resumo_por_uf(ufs: tuple[str, ...] | None = None) -> pd.DataFrame:
+    """Totais e indicadores por unidade federativa."""
+    return consulta(f"""
+        SELECT uf,
+               SUM(internacoes)                                        AS internacoes,
+               ROUND(SUM(dias_permanencia) / SUM(internacoes), 2)      AS permanencia,
+               ROUND(100 * SUM(obitos) / SUM(internacoes), 2)          AS mortalidade,
+               ROUND(SUM(valor_total) / SUM(internacoes), 2)           AS custo
+          FROM T_SAUDE_FATO_INTERNACAO_MENSAL
+         WHERE 1 = 1{filtro_uf(ufs)}
+         GROUP BY uf
+         ORDER BY SUM(internacoes) DESC
+    """)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
 def ocupacao_ponderada(ufs: tuple[str, ...] | None = None) -> pd.DataFrame:
     """
-    Taxa de ocupacao por porte de municipio, ponderada por leitos-dia.
+    Taxa de ocupacao por porte de municipio.
 
-    A media simples entre municipios-mes seria enganosa: uma cidade com tres
-    leitos pesaria tanto quanto Sao Paulo.
+    Traz as duas versoes de proposito: a media simples entre municipios-mes,
+    que trata uma cidade de tres leitos igual a Sao Paulo, e a ponderada por
+    leitos-dia, que e a taxa real do sistema.
     """
-    capacidade = carrega("ind_capacidade_municipal")
-    if ufs:
-        capacidade = capacidade[capacidade["uf"].isin(ufs)]
-
-    agregado = (capacidade.groupby("porte", as_index=False)
-                .agg(municipios=("cod_municipio_6", "nunique"),
-                     internacoes=("internacoes", "sum"),
-                     dias_permanencia=("dias_permanencia", "sum"),
-                     leitos_dia=("leitos_dia_disponiveis", "sum"),
-                     ocupacao_simples=("taxa_ocupacao", "mean")))
-    agregado["ocupacao_ponderada"] = (
-        agregado["dias_permanencia"] / agregado["leitos_dia"]).round(3)
-    agregado["ocupacao_simples"] = agregado["ocupacao_simples"].round(3)
-    return agregado.sort_values("ocupacao_ponderada", ascending=False)
+    return consulta(f"""
+        SELECT porte,
+               COUNT(DISTINCT cod_municipio_6)                             AS municipios,
+               SUM(internacoes)                                            AS internacoes,
+               ROUND(AVG(taxa_ocupacao), 3)                                AS ocupacao_simples,
+               ROUND(SUM(dias_permanencia) / SUM(leitos_dia_disponiveis), 3) AS ocupacao_ponderada
+          FROM T_SAUDE_IND_CAPACIDADE_MUNICIPAL
+         WHERE leitos_dia_disponiveis > 0{filtro_uf(ufs)}
+         GROUP BY porte
+         ORDER BY ocupacao_ponderada DESC
+    """)
 
 
-@st.cache_data(ttl=600, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
+def situacao_capacidade(ufs: tuple[str, ...] | None = None) -> pd.DataFrame:
+    """Contagem de municipio-mes por classificacao de ocupacao."""
+    return consulta(f"""
+        SELECT situacao, COUNT(*) AS municipios_mes
+          FROM T_SAUDE_IND_CAPACIDADE_MUNICIPAL
+         WHERE 1 = 1{filtro_uf(ufs)}
+         GROUP BY situacao
+    """)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def municipios_criticos(ufs: tuple[str, ...] | None = None,
+                        limite: int = 25) -> pd.DataFrame:
+    """Municipios com maior taxa de ocupacao, em atencao ou situacao critica."""
+    corte = ("LIMIT " + str(limite) if _modo() == "parquet"
+             else f"FETCH FIRST {limite} ROWS ONLY")
+    return consulta(f"""
+        SELECT municipio, uf, competencia, populacao, internacoes,
+               leitos_sus, taxa_ocupacao, situacao
+          FROM T_SAUDE_IND_CAPACIDADE_MUNICIPAL
+         WHERE situacao IN ('Critica', 'Atencao'){filtro_uf(ufs)}
+         ORDER BY taxa_ocupacao DESC
+         {corte}
+    """)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
 def perfis_pressao(ufs: tuple[str, ...] | None = None) -> pd.DataFrame:
-    """Perfis de atendimento ordenados por consumo de leitos-dia."""
-    fato = carrega("fato_internacao_mensal")
-    if ufs:
-        fato = fato[fato["uf"].isin(ufs)]
+    """
+    Perfis de atendimento ordenados por consumo de leitos-dia.
 
-    total_internacoes = fato["internacoes"].sum()
-    total_leitos_dia = fato["dias_permanencia"].sum()
+    A pressao relativa compara a participacao do perfil nos leitos-dia com a
+    participacao no numero de internacoes. Acima de 1, o perfil ocupa mais
+    leito do que o volume sugere.
+    """
+    perfil = consulta(f"""
+        SELECT perfil_atendimento,
+               SUM(internacoes)      AS internacoes,
+               SUM(dias_permanencia) AS leitos_dia,
+               SUM(valor_total)      AS valor_total,
+               SUM(obitos)           AS obitos
+          FROM T_SAUDE_FATO_INTERNACAO_MENSAL
+         WHERE 1 = 1{filtro_uf(ufs)}
+         GROUP BY perfil_atendimento
+         ORDER BY leitos_dia DESC
+    """)
+    if perfil.empty:
+        return perfil
 
-    perfil = (fato.groupby("perfil_atendimento", as_index=False)
-              .agg(internacoes=("internacoes", "sum"),
-                   leitos_dia=("dias_permanencia", "sum"),
-                   valor_total=("valor_total", "sum"),
-                   obitos=("obitos", "sum")))
-
+    total_internacoes = perfil["internacoes"].sum()
+    total_leitos_dia = perfil["leitos_dia"].sum()
     perfil["pct_internacoes"] = (
         100 * perfil["internacoes"] / total_internacoes).round(2)
     perfil["pct_leitos_dia"] = (
         100 * perfil["leitos_dia"] / total_leitos_dia).round(2)
-    # Acima de 1: o perfil ocupa mais leito do que o volume sugere.
     perfil["pressao_relativa"] = (
         perfil["pct_leitos_dia"] / perfil["pct_internacoes"]).round(2)
     perfil["permanencia_media"] = (
         perfil["leitos_dia"] / perfil["internacoes"]).round(2)
     perfil["custo_medio_aih"] = (
         perfil["valor_total"] / perfil["internacoes"]).round(2)
-
-    return perfil.sort_values("leitos_dia", ascending=False)
+    return perfil

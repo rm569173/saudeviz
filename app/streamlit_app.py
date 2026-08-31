@@ -126,10 +126,7 @@ def pagina_visao_geral(ufs: tuple[str, ...]) -> None:
 
     with esquerda:
         st.subheader("Internações por mês de internação")
-        fato = dados.carrega("fato_internacao_mensal")
-        fato = fato[fato["uf"].isin(ufs)]
-        mensal = (fato.groupby(["uf", "mes"], as_index=False)["internacoes"]
-                  .sum().sort_values("mes"))
+        mensal = dados.internacoes_por_mes(ufs)
 
         figura = go.Figure()
         for uf in [u for u in UFS_DISPONIVEIS if u in ufs]:
@@ -152,16 +149,7 @@ def pagina_visao_geral(ufs: tuple[str, ...]) -> None:
 
     with direita:
         st.subheader("Total de internações por estado em 2024")
-        resumo = (fato.groupby("uf", as_index=False)
-                  .agg(internacoes=("internacoes", "sum"),
-                       dias=("dias_permanencia", "sum"),
-                       obitos=("obitos", "sum"),
-                       valor=("valor_total", "sum")))
-        resumo["permanencia"] = (resumo["dias"] / resumo["internacoes"]).round(2)
-        resumo["mortalidade"] = (
-            100 * resumo["obitos"] / resumo["internacoes"]).round(2)
-        resumo["custo"] = (resumo["valor"] / resumo["internacoes"]).round(2)
-        resumo = resumo.sort_values("internacoes", ascending=True)
+        resumo = dados.resumo_por_uf(ufs).sort_values("internacoes")
 
         figura = go.Figure(go.Bar(
             x=resumo["internacoes"],
@@ -201,10 +189,9 @@ def pagina_capacidade(ufs: tuple[str, ...]) -> None:
     st.caption("Onde a demanda por internação superou a capacidade de leitos "
                "SUS declarada ao CNES.")
 
-    capacidade = dados.carrega("ind_capacidade_municipal")
-    capacidade = capacidade[capacidade["uf"].isin(ufs)]
+    situacoes = dados.situacao_capacidade(ufs)
+    contagem = dict(zip(situacoes["situacao"], situacoes["municipios_mes"]))
 
-    contagem = capacidade["situacao"].value_counts()
     ordem = ["Folga", "Adequada", "Atencao", "Critica"]
     colunas = st.columns(4)
     for coluna, situacao in zip(colunas, ordem):
@@ -251,8 +238,7 @@ def pagina_capacidade(ufs: tuple[str, ...]) -> None:
         "as duas em vez de escolher uma em silêncio.", icon="📐")
 
     st.subheader("Municípios com maior taxa de ocupação de leitos")
-    criticos = (capacidade[capacidade["situacao"].isin(["Critica", "Atencao"])]
-                .nlargest(25, "taxa_ocupacao"))
+    criticos = dados.municipios_criticos(ufs)
     if criticos.empty:
         st.success("Nenhum município em situação de atenção ou crítica na "
                    "seleção atual.")
