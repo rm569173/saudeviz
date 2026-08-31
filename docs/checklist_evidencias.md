@@ -141,14 +141,17 @@ importantes do PPT.
 | 27 | `painel_02_capacidade_status.png` | Capacidade hospitalar | Cartões de status + gráfico de porte | ✅ |
 | 28 | `painel_03_capacidade_criticos.png` | Capacidade, rolado | Tabela de municípios críticos | ✅ |
 | 29 | `painel_04_perfis_pressao.png` | Perfis de atendimento | ⭐ Gráfico de pressão relativa | ✅ |
-| 30 | `painel_05_previsao_serie.png` | Previsão de demanda | Série com intervalo de confiança | |
-| 31 | `painel_06_previsao_modelos.png` | Previsão, rolado | Comparativo de modelos + efeito do dia da semana | |
-| 32 | `painel_07_dimensionamento.png` | Previsão, fim da página | ⭐ Curva de leitos necessários mês a mês + os 4 cartões | |
-| 33 | `painel_08_nlsql_exemplos.png` | Pergunte em português | Caixa de pergunta + exemplos sugeridos | |
-| 34 | `painel_09_nlsql_intencao.png` | Pergunte, após enviar | ⭐ Intenção reconhecida + filtros extraídos | |
-| 35 | `painel_10_nlsql_sql.png` | Pergunte, rolado | ⭐ **O SQL gerado** | |
-| 36 | `painel_11_nlsql_resultado.png` | Pergunte, rolado | Resultado da consulta | |
-| 37 | `painel_12_sidebar_oracle.png` | qualquer | Barra lateral mostrando o modo de conexão | |
+| 30 | `painel_05_previsao_serie.png` | Previsão de demanda | Série com intervalo de confiança | ✅ |
+| 31 | `painel_06_previsao_modelos.png` | Previsão, rolado | Comparativo de modelos + efeito do dia da semana | ⚠️ refazer: barra do Plotly sobreposta |
+| 32 | `painel_07_dimensionamento.png` | Previsão, fim da página | ⭐ Curva de leitos necessários mês a mês + os 4 cartões | ⚠️ refazer: salvo como HEIF, não PNG |
+| 33 | `painel_08_nlsql_exemplos.png` | Pergunte em português | Caixa de pergunta + os 8 exemplos | ✅ |
+| 34 | `painel_09_nlsql_intencao.png` | Pergunte — "quais hospitais mais transferem pacientes?" | ⭐ Intenção 80% + SQL sobre `T_SAUDE_RANK_HOSPITAIS` + resultado | ✅ |
+| 35 | `painel_10_nlsql_sql.png` | Pergunte — "onde a capacidade está sendo ultrapassada?" | ⭐ Intenção 75% + SQL sobre `T_SAUDE_IND_CAPACIDADE_MUNICIPAL` + "10 linhas retornadas do Oracle Database" | ✅ |
+| 36 | `painel_12_sidebar_oracle.png` | qualquer | Barra lateral mostrando o modo de conexão | ✅ |
+
+Os prints 34 e 35 são **duas perguntas diferentes**, cada uma completa da
+pergunta ao resultado. Provam que o tradutor escolhe a tabela pela intenção —
+mais forte do que fatiar uma única consulta em três imagens.
 
 **No print 32** (`painel_07_dimensionamento`), selecione **Belo Horizonte**: é a capital com a menor folga no
 pico (408 leitos, 6% da capacidade) e a única em que o painel dispara o alerta

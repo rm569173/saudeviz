@@ -341,10 +341,17 @@ epidemiológica — fora do escopo desta sprint, e registrado como próximo pass
 ## Select AI
 
 ### Slide 27 — Perguntas em linguagem natural
-🖼️ `painel_08_nlsql_exemplos.png` · `painel_09_nlsql_intencao.png`
+🖼️ `painel_08_nlsql_exemplos.png`
 
 ### Slide 28 — O SQL gerado e executado
-🖼️ `painel_10_nlsql_sql.png` · `painel_11_nlsql_resultado.png`
+🖼️ `painel_09_nlsql_intencao.png` · `painel_10_nlsql_sql.png`
+```
+Duas perguntas, duas tabelas diferentes:
+
+"quais hospitais mais transferem pacientes?"    → T_SAUDE_RANK_HOSPITAIS
+"onde a capacidade esta sendo ultrapassada?"    → T_SAUDE_IND_CAPACIDADE_MUNICIPAL
+```
+A tabela é escolhida pela intenção reconhecida, não por uma consulta fixa.
 ```
 O SQL continua sendo gerado e executado no Oracle. O tradutor remove a
 barreira da sintaxe para quem decide.
