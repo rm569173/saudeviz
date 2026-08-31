@@ -293,7 +293,14 @@ def internacoes_por_mes(ufs: tuple[str, ...] | None = None) -> pd.DataFrame:
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def resumo_por_uf(ufs: tuple[str, ...] | None = None) -> pd.DataFrame:
-    """Totais e indicadores por unidade federativa."""
+    """
+    Totais e indicadores por unidade federativa.
+
+    O ORDER BY usa o alias, e nao SUM(internacoes) de novo: no Oracle o alias
+    e resolvido antes da coluna de origem, e como ele ja e o proprio SUM,
+    repetir a funcao criaria um agregado aninhado - que o banco rejeita. O
+    DuckDB aceita, entao o erro so aparecia com o Oracle conectado.
+    """
     return consulta(f"""
         SELECT uf,
                SUM(internacoes)                                        AS internacoes,
@@ -303,7 +310,7 @@ def resumo_por_uf(ufs: tuple[str, ...] | None = None) -> pd.DataFrame:
           FROM T_SAUDE_FATO_INTERNACAO_MENSAL
          WHERE 1 = 1{filtro_uf(ufs)}
          GROUP BY uf
-         ORDER BY SUM(internacoes) DESC
+         ORDER BY internacoes DESC
     """)
 
 
