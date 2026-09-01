@@ -1,24 +1,12 @@
-CHALLENGE FIAP x ORACLE 2026 - SPRINT 2
-Video pitch
-
-NOME DA EQUIPE
-SaudeViz
-
-TURMA
-1TSCOA
-
-INTEGRANTES (RM e nome, em ordem alfabetica)
 RM 569173 - Lucas Ventura Araujo Ribas Colen
 
 LINK DO VIDEO PITCH NO YOUTUBE
 _____________________________________________________________
-COLE AQUI A URL
+https://youtu.be/3LEW0WdBYis
 _____________________________________________________________
 
-O video deve estar com visibilidade PUBLICA. A regra 11 das regras
-gerais pede "privilegio de acesso publico". Nao usar "nao listado".
-
-DEMAIS LINKS DA ENTREGA
+ENTREGAS
 Painel:  https://saudeviz.streamlit.app
 Codigo:  https://github.com/rm569173/saudeviz
 Kanban:  https://trello.com/b/3XTAInGQ
+

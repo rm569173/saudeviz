@@ -14,6 +14,7 @@ todo.
 | | |
 |---|---|
 | 🖥️ **Painel no ar** | https://saudeviz.streamlit.app |
+| 🎬 **Vídeo pitch** | https://youtu.be/3LEW0WdBYis |
 | 📋 **Quadro Kanban** | https://trello.com/b/3XTAInGQ |
 | 💾 **Repositório** | https://github.com/rm569173/saudeviz |
 

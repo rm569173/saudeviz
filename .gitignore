@@ -67,3 +67,7 @@ video gravacao/
 # Slides exportados como PNG pelo PowerPoint. O .pptx ja esta versionado.
 *- Copia/
 *- Copy/
+
+# Pasta de empacotamento da entrega: e uma copia do proprio repositorio,
+# montada so para gerar o .zip do portal da FIAP.
+1TSCO_Sprint_2_Entrega_Final_Projeto_Challenge_SaudeViz_RM569173/
