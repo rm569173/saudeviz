@@ -58,3 +58,12 @@ desktop.ini
 *.dbf
 *.dbc
 *.log
+
+# Material de gravacao e edicao do video: fica no disco, nao no repositorio.
+# Sao centenas de MB de bruto, e o GitHub recusa arquivo acima de 100 MB.
+video gravação/
+video gravacao/
+
+# Slides exportados como PNG pelo PowerPoint. O .pptx ja esta versionado.
+*- Copia/
+*- Copy/

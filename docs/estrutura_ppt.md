@@ -443,6 +443,6 @@ github.com/rm569173/saudeviz
 - [ ] Nome do arquivo no padrão exigido
 - [ ] Link do painel funcionando, testado num navegador anônimo
 - [ ] Link do GitHub público
-- [ ] Link do vídeo no YouTube, não listado ou público
+- [ ] Link do vídeo no YouTube com visibilidade **Pública** (regra 11)
 - [ ] Link do quadro Kanban público
 - [ ] Nenhuma senha, token ou credencial visível em qualquer print

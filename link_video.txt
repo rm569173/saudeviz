@@ -1,19 +1,22 @@
-SAUDEVIZ - Painel inteligente de acesso hospitalar e perfil de atendimento
-Challenge FIAP x Oracle 2026 - Sprint 2
+CHALLENGE FIAP x ORACLE 2026 - SPRINT 2
+Video pitch
 
-LINK DO VIDEO
-_____________________________________________________________
-COLE AQUI A URL DO YOUTUBE
-_____________________________________________________________
-
-Publicar como NAO LISTADO ou PUBLICO. Video privado nao abre
-para o avaliador e vale como nao entregue.
-
-INTEGRANTES (ordem alfabetica)
-Lucas Ventura Araujo Ribas Colen - RM 569173
+NOME DA EQUIPE
+SaudeViz
 
 TURMA
 1TSCOA
+
+INTEGRANTES (RM e nome, em ordem alfabetica)
+RM 569173 - Lucas Ventura Araujo Ribas Colen
+
+LINK DO VIDEO PITCH NO YOUTUBE
+_____________________________________________________________
+COLE AQUI A URL
+_____________________________________________________________
+
+O video deve estar com visibilidade PUBLICA. A regra 11 das regras
+gerais pede "privilegio de acesso publico". Nao usar "nao listado".
 
 DEMAIS LINKS DA ENTREGA
 Painel:  https://saudeviz.streamlit.app

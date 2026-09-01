@@ -204,6 +204,7 @@ Sugestão: "quais hospitais têm maior permanência média em Minas Gerais?"*
 
 ## Depois de gravar
 
-1. Subir no YouTube como **não listado** ou **público** — nunca privado
+1. Subir no YouTube com visibilidade **Pública**. A regra 11 das regras
+   gerais pede "privilégio de acesso público" — **não** use "não listado"
 2. Preencher `link_video.txt` com a URL
 3. Rodar `py docs/gera_ppt.py` para o link entrar no slide 45 do PPT
